@@ -7,7 +7,6 @@
 #' Names with ".": arguments / options for functions
 # Set Global options and load intiial packages ---------------------------------
 options(stringsAsFactors = FALSE, scipen = 99)
-suppressMessages(library("argparse"))
 suppressMessages(library("pander"))
 panderOptions("table.style", "simple")
 panderOptions("table.split.table", Inf)
@@ -19,54 +18,54 @@ desc <- yaml::yaml.load_file(file.path(code_dir, "descriptions.yml"))
 
 # Set up and gather command line arguments -------------------------------------
 ## Argument parser =============================================================
-parser <- ArgumentParser(description = desc$program_short_description)
-parser$add_argument(
+argparse::parser <- ArgumentParser(description = desc$program_short_description)
+argparse::parser$add_argument(
   "-m", "--manifest", type = "character", help = desc$manifest)
-parser$add_argument(
+argparse::parser$add_argument(
   "--read1", type = "character", default = "NA", help = desc$read1)
-parser$add_argument(
+argparse::parser$add_argument(
   "--read2", type = "character", default = "NA", help = desc$read2)
-parser$add_argument(
+argparse::parser$add_argument(
   "--index1", type = "character", default = "NA", help = desc$index1)
-parser$add_argument(
+argparse::parser$add_argument(
   "--index2", type = "character", default = "NA", help = desc$index2)
-parser$add_argument(
+argparse::parser$add_argument(
   "-o", "--outfolder", nargs = 1, type = "character", help = desc$outfolder)
-parser$add_argument(
+argparse::parser$add_argument(
   "-p", "--poolreps", action = "store_true", help = desc$poolreps)
-parser$add_argument(
+argparse::parser$add_argument(
   "--singleBarcode", action = "store_true", help = desc$singleBarcode)
-parser$add_argument(
+argparse::parser$add_argument(
   "--barcode1", nargs = 1, type = "character", 
   default = "I1", help = desc$barcode1)
-parser$add_argument(
+argparse::parser$add_argument(
   "--barcode2", nargs = 1, type = "character", 
   default = "I2", help = desc$barcode2)
-parser$add_argument(
+argparse::parser$add_argument(
   "--barcode1Length", nargs = 1, type = "integer", default = 8, 
   help = desc$barcode1Length)
-parser$add_argument(
+argparse::parser$add_argument(
   "--barcode2Length", nargs = 1, type = "integer", default = 8,
   help = desc$barcode2Length)
-parser$add_argument(
+argparse::parser$add_argument(
   "--maxMismatch", nargs = 1, type = "integer", help = desc$maxMismatch)
-parser$add_argument(
+argparse::parser$add_argument(
   "--bc1Mismatch", nargs = 1, type = "integer", default = 0, 
   help = desc$bc1Mismatch)
-parser$add_argument(
+argparse::parser$add_argument(
   "--bc2Mismatch", nargs = 1, type = "integer", default = 0,
   help = desc$bc2Mismatch)
-parser$add_argument(
+argparse::parser$add_argument(
   "--stat", nargs = 1, type = "character", default = FALSE, help = desc$stat)
-parser$add_argument(
+argparse::parser$add_argument(
   "--readNamePattern", nargs = 1, type = "character", 
   default = "[\\w\\:\\-\\+]+", help = desc$readNamePattern)
-parser$add_argument(
+argparse::parser$add_argument(
   "--compress", action = "store_true", help = desc$compress)
-parser$add_argument(
+argparse::parser$add_argument(
   "-c", "--cores", nargs = 1, default = 1, type = "integer", help = desc$cores)
 
-args <- parser$parse_args(commandArgs(trailingOnly = TRUE))
+args <- argparse::parser$parse_args(commandArgs(trailingOnly = TRUE))
 
 demulti <- data.frame(
   "readType" = c("R1", "R2", "I1", "I2"),
@@ -113,14 +112,13 @@ if(!file.exists(args$outfolder)){
   if(attempt == 1) stop("Cannot create output folder.")
 }
 
-# Load additional packages -----------------------------------------------------
-add_packs <- c("stringr", "ShortRead", "Biostrings")
-add_packs_loaded <- suppressMessages(
-  sapply(add_packs, require, character.only = TRUE))
-if(!all(add_packs_loaded)){
+# Check for required packages --------------------------------------------------
+required_packs <- c("stringr", "ShortRead", "Biostrings")
+present_packs <- required_packs %in% row.names(installed.packages())
+if(!all(present_packs)){
   pandoc.table(data.frame(
-    "R-Packages" = names(add_packs_loaded), 
-    "Loaded" = add_packs_loaded, 
+    "R-Packages" = required_packs, 
+    "Installed" = present_packs, 
     row.names = NULL))
   stop("Check dependancies.")
 }
@@ -130,9 +128,10 @@ fileExt <- unlist(strsplit(args$manifest, "\\."))
 fileExt <- fileExt[length(fileExt)]
 
 if(fileExt %in% c("yaml", "yml")){
-  suppressMessages(library("yaml"))
-  if(!"package:yaml" %in% search()) stop("Package:yaml not loaded or installed.")
-  manifest <- yaml.load_file(args$manifest)
+  if(!"yaml" %in% row.names(installed.packages()){
+    stop("Package:yaml not loaded or installed.")
+  }
+  manifest <- yaml::yaml.load_file(args$manifest)
   if(args$singleBarcode){
     samples_df <- data.frame(
       "sampleName" = names(manifest$samples),
@@ -172,32 +171,32 @@ if(!args$singleBarcode){
 parseIndexReads <- function(barcode, indexFilePath, barcodeLength, maxMismatch, 
                             readNamePattern){
   # Require packages for parallel processing
-  dependencies <- c("stringr", "ShortRead", "Biostrings")
-  loaded <- sapply(dependencies, require, character.only = TRUE)
-  stopifnot(all(loaded))
+#  dependencies <- c("stringr", "ShortRead", "Biostrings")
+#  loaded <- sapply(dependencies, require, character.only = TRUE)
+#  stopifnot(all(loaded))
 
   # Load index file sequences and sequence names
-  index <- readFastq(indexFilePath)
+  index <- ShortRead::readFastq(indexFilePath)
   index <- ShortRead::narrow(index, start = 1, end = barcodeLength)
-  index@id <- BStringSet(str_extract(as.character(id(index)), readNamePattern))
+  index@id <- Biostrings::BStringSet(str_extract(as.character(id(index)), readNamePattern))
   
   # Trim barcode if necessary
-  barcode <- as.character(DNAStringSet(barcode, start = 1, end = barcodeLength))
+  barcode <- as.character(Biostrings::DNAStringSet(barcode, start = 1, end = barcodeLength))
 
   # Identify read names with sequences above or equal to the minscore
-  vmp <- vmatchPattern(
+  vmp <- Biostrings::vmatchPattern(
     barcode, sread(index), max.mismatch = maxMismatch, fixed = FALSE)
   which(lengths(vmp) == 1)
 }
 
-barcode1_reads <- readFastq(demulti$path[demulti$barcode1])
+barcode1_reads <- ShortRead::readFastq(demulti$path[demulti$barcode1])
 message(paste("Reads to demultiplex : ", length(barcode1_reads)))
 
 if(args$cores > 1){
-  suppressMessages(library(parallel))
-  cluster <- makeCluster(min(c(detectCores(), args$cores)))
+#  suppressMessages(library(parallel))
+  cluster <- parallel::makeCluster(min(c(parallel::detectCores(), args$cores)))
   
-  BC1_parsed <-  parLapply(
+  BC1_parsed <-  parallel::parLapply(
     cluster,
     unique(samples_df$barcode1), 
     parseIndexReads,
@@ -214,7 +213,7 @@ if(args$cores > 1){
       row.names = NULL))
   
   if(!args$singleBarcode){
-    BC2_parsed <- parLapply(
+    BC2_parsed <- parallel::parLapply(
       cluster, 
       unique(samples_df$barcode2), 
       parseIndexReads,
@@ -224,7 +223,7 @@ if(args$cores > 1){
       readNamePattern = args$readNamePattern)
   }
   
-  stopCluster(cluster)
+  parallel::stopCluster(cluster)
 }else{
   BC1_parsed <-  lapply(
     unique(samples_df$barcode1), 
@@ -264,7 +263,7 @@ if(!args$singleBarcode){
 if(!args$singleBarcode){
   demultiplexedIndices <- mapply(
     function(barcode1, barcode2){
-      intersect(BC1_parsed[[barcode1]], BC2_parsed[[barcode2]])
+      Biostrings::intersect(BC1_parsed[[barcode1]], BC2_parsed[[barcode2]])
     },
     barcode1 = samples_df$barcode1,
     barcode2 = samples_df$barcode2,
@@ -315,7 +314,7 @@ if(args$stat != FALSE){
 
 # Create multiplex dataframe for subseting sequencing files --------------------
 multiplexedData <- data.frame(
-  "sampleName" = Rle(
+  "sampleName" = S4Vectors::Rle(
     values = samples_df$sampleName, 
     length = sapply(demultiplexedIndices, length)),
   "index" = unlist(demultiplexedIndices),
@@ -347,13 +346,9 @@ message(paste0("\nReads to be written to files: ", nrow(multiplexedData)))
 # Write files to read files to outfolder directory
 writeDemultiplexedSequences <- function(readFilePath, type, multiplexedData, 
                                         readNamePattern, outfolder, compress){
-  # Require packages for parallel processing
-  dependencies <- c("stringr", "ShortRead", "Biostrings")
-  loaded <- sapply(dependencies, require, character.only = TRUE)
-  stopifnot(all(loaded))
   # Load read sequences and sequence names then write to file
-  reads <- readFastq(readFilePath)
-  reads@id <- BStringSet(str_extract(as.character(id(reads)), readNamePattern))
+  reads <- ShortRead::readFastq(readFilePath)
+  reads@id <- Biostrings::BStringSet(stringr::str_extract(as.character(ShortRead::id(reads)), readNamePattern))
   reads <- reads[multiplexedData$index]
   reads <- split(reads, multiplexedData$sampleName)
   null <- lapply(1:length(reads), function(i, reads, type, outfolder, compress){
@@ -365,7 +360,7 @@ writeDemultiplexedSequences <- function(readFilePath, type, multiplexedData,
         outfolder, paste0(names(reads[i]), ".", type, ".fastq"))
     }
     if(file.exists(filePath)) unlink(filePath)
-    writeFastq(reads[[i]], file = filePath, compress = compress)
+    ShortRead::writeFastq(reads[[i]], file = filePath, compress = compress)
     message(
       paste0("\nWrote ", length(reads[[i]]), " reads to:\n", filePath, "."))
   }, reads = reads, type = type, outfolder = outfolder, compress = compress)
@@ -373,12 +368,12 @@ writeDemultiplexedSequences <- function(readFilePath, type, multiplexedData,
 }
 
 if(args$cores > 1){
-  cluster <- makeCluster(min(c(detectCores(), args$cores)))
+  cluster <- parallel::makeCluster(min(c(parallel::detectCores(), args$cores)))
   
   readList <- demulti$readType[demulti$path != "NA"]
   readPaths <- demulti$path[match(readList, demulti$readType)]
 
-  demultiplex <- clusterMap(
+  demultiplex <- parallel::clusterMap(
     cluster,
     writeDemultiplexedSequences,
     readFilePath = readPaths,
@@ -389,7 +384,7 @@ if(args$cores > 1){
       outfolder = args$outfolder,
       compress = args$compress))
   
-  stopCluster(cluster)
+  parallel::stopCluster(cluster)
 }else{
   readList <- demulti$readType[demulti$path != "NA"]
   readPaths <- demulti$path[match(readList, demulti$readType)]
