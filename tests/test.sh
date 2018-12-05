@@ -2,7 +2,7 @@
 set -ev
 
 # Test functionality of dualDemultiplexR
-Rscript dualDemultiplex.R -m tests/sampleInfo.tsv \
+Rscript scripts/demulti.R -m tests/sampleInfo.tsv \
   --read1 tests/Data/Undetermined_S0_L001_R1_001.fastq.gz \
   --read2 tests/Data/Undetermined_S0_L001_R2_001.fastq.gz \
   --index1 tests/Data/Undetermined_S0_L001_I1_001.fastq.gz \
