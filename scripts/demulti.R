@@ -5,9 +5,8 @@
 #' Names in caMel format: functions or components of objects (i.e. columns 
 #' within a data.frame).
 #' Names with ".": arguments / options for functions
-# Set Global options and load intiial packages ---------------------------------
+# Set Global options and load intiial packages ----
 options(stringsAsFactors = FALSE, scipen = 99)
-suppressMessages(library("argparse"))
 suppressMessages(library("pander"))
 panderOptions("table.style", "simple")
 panderOptions("table.split.table", Inf)
@@ -20,9 +19,9 @@ code_dir <- dirname(sub(
 
 desc <- yaml::yaml.load_file(file.path(code_dir, "demulti.desc.yml"))
 
-# Set up and gather command line arguments -------------------------------------
-## Argument parser =============================================================
-parser <- ArgumentParser(description = desc$program_short_description)
+# Set up and gather command line arguments ----
+## Argument parser ----
+parser <- argparse::ArgumentParser(description = desc$program_short_description)
 
 parser$add_argument(
   "-m", "--manifest", type = "character", 
@@ -179,7 +178,7 @@ pandoc.table(
   split.tables = Inf
 )
 
-# Create output directory if not currently available ---------------------------
+# Create output directory if not currently available ----
 if( !file.exists(args$outfolder) ){
   
   attempt <- try(system(paste0("mkdir ", args$outfolder)))
@@ -187,7 +186,7 @@ if( !file.exists(args$outfolder) ){
 
 }
 
-# Check for required packages --------------------------------------------------
+# Check for required packages ----
 required_packs <- c("stringr", "ShortRead", "Biostrings")
 present_packs <- required_packs %in% row.names(installed.packages())
 
@@ -273,7 +272,7 @@ writeDemultiplexedSequences <- function(read.file.path, type, multiplexed.data,
   return(list(read.file.path, type, out.folder))
   
 }
-# Load manifest / sample mapping file ------------------------------------------
+# Load manifest / sample mapping file ----
 fileExt <- unlist(strsplit(args$manifest, "\\."))
 fileExt <- fileExt[length(fileExt)]
 
@@ -337,7 +336,7 @@ if( !args$singleBarcode ){
 
 }
 
-# Read in barcode sequences ----------------------------------------------------
+# Read in barcode sequences ----
 barcode1_reads <- ShortRead::readFastq(demulti$path[demulti$barcode1])
 message(paste("Reads to demultiplex : ", length(barcode1_reads)))
 
@@ -501,7 +500,7 @@ if( args$stat != FALSE ){
   )
 }
 
-# Create multiplex dataframe for subseting sequencing files --------------------
+# Create multiplex dataframe for subseting sequencing files ----
 multiplexed_data <- data.frame(
   "sampleName" = S4Vectors::Rle(
     values = samples_df$sampleName, 

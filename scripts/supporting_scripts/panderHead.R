@@ -8,18 +8,26 @@
 #' 
 
 panderHead <- function(object, title = NULL, caption = NULL, row.names = FALSE){
-  stopifnot(!class(object) == "list")
-  if(!is.null(title)) pandoc.title(title)
+  
+  stopifnot( !class(object) == "list" )
+  
+  if( !is.null(title) ) pandoc.title(title)
   
   if(!row.names){
-    df <- as.data.frame(head(object), row.names = NULL)
+    df <- as.data.frame( head(object), row.names = NULL )
   }else{
-    df <- as.data.frame(head(object))
+    df <- as.data.frame( head(object) )
   }
   
   acceptable_classes <- c("factor", "character", "numeric", "integer")
-  df <- df[,which(
-    sapply(1:ncol(df), function(i) class(df[,i])) %in% acceptable_classes)]
   
-  pandoc.table(df, style = "simple", split.tables = Inf, caption = caption)
+  df <- df[, which(
+    sapply( seq_len(ncol(df)), function(i) class(df[,i]) ) %in% 
+      acceptable_classes
+  )]
+  
+  pander::pandoc.table(
+    df, style = "simple", split.tables = Inf, caption = caption
+  )
+  
 }
