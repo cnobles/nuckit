@@ -7,11 +7,11 @@
 #' @author Christopher Nobles, Ph.D.
 #' 
 
-panderHead <- function(object, title = NULL, caption = NULL, row.names = FALSE){
+printHead <- function(object, title = NULL, caption = NULL, row.names = FALSE){
   
   stopifnot( !class(object) == "list" )
   
-  if( !is.null(title) ) pandoc.title(title)
+  if( !is.null(title) ) cat(paste0("\n", title, ":"))
   
   if(!row.names){
     df <- as.data.frame( head(object), row.names = NULL )
@@ -26,8 +26,7 @@ panderHead <- function(object, title = NULL, caption = NULL, row.names = FALSE){
       acceptable_classes
   )]
   
-  pander::pandoc.table(
-    df, style = "simple", split.tables = Inf, caption = caption
-  )
-  
+  print(df, row.names = FALSE)
+  cat(paste0("Table Caption: ", caption))
+    
 }

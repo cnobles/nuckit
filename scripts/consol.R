@@ -1,6 +1,5 @@
 #!/usr/bin/env Rscript
 options(stringsAsFactors = FALSE)
-suppressMessages(library("pander"))
 
 code_dir <- dirname(sub("--file=", "", grep(
   "--file=", commandArgs(trailingOnly = FALSE), value = TRUE)))
@@ -9,22 +8,34 @@ desc <- desc <- yaml::yaml.load_file(file.path(code_dir, "consol.desc.yml"))
 
 #' Set up and gather command line arguments
 parser <- argparse::ArgumentParser(description = desc$program_short_description)
+
 parser$add_argument(
   "seqFile", nargs = 1, type = "character", default = "NA",
-  help = desc$seqFile)
+  help = desc$seqFile
+)
+
 parser$add_argument(
   "-o", "--output", nargs = 1, type = "character", default = "NA",
-  help = desc$output)
+  help = desc$output
+)
+
 parser$add_argument(
   "-k", "--keyFile", nargs = 1, type = "character", default = "NA",
-  help = desc$keyFile)
+  help = desc$keyFile
+)
+
 parser$add_argument(
   "-l", "--seqName", nargs = 1, type = "character", default = "NA",
-  help = desc$seqName)
+  help = desc$seqName
+)
+
 parser$add_argument(
-  "--stat", nargs = 1, type = "character", default = FALSE, help = desc$stat)
+  "--stat", nargs = 1, type = "character", default = FALSE, help = desc$stat
+)
+
 parser$add_argument(
-  "--compress", action = "store_true", help = desc$compress) 
+  "--compress", action = "store_true", help = desc$compress
+) 
 
 args <- parser$parse_args(commandArgs(trailingOnly = TRUE))
 
@@ -108,11 +119,10 @@ input_table <- input_table[
     input_table$Variables)
 ,]
 
-pandoc.title("seqConsolidateR Inputs")
-pandoc.table(
+cat("Consolidate Inputs:")
+print(
   data.frame(input_table, row.names = NULL), 
-  justify = c("left", "left"), 
-             split.tables = Inf
+  right = FALSE, row.names = FALSE
 )
 
 
@@ -224,12 +234,12 @@ if( args$stat != FALSE ){
 # Output
 if( is.null(args$output) ){
   
-  pandoc.table(
+  print(
     data.frame(
       "seqID" = names(consolidated_seqs),
-      "sequence" = as.character(consolidated_seqs),
-      row.names = NULL),
-    style = "simple"
+      "sequence" = as.character(consolidated_seqs)
+    ),
+    row.names = FALSE
   )
   
 }else{

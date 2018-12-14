@@ -7,9 +7,6 @@
 #' Names with ".": arguments / options for functions
 # Set Global options and load intiial packages ----
 options(stringsAsFactors = FALSE, scipen = 99)
-suppressMessages(library("pander"))
-panderOptions("table.style", "simple")
-panderOptions("table.split.table", Inf)
 
 code_dir <- dirname(sub(
   "--file=", "", grep(
@@ -39,18 +36,68 @@ parser$add_argument(
 )
 
 parser$add_argument(
-  "--index1", type = "character", default = "NA", 
-  help = desc$index1
+  "--idx1", type = "character", default = "NA", 
+  help = desc$idx1
 )
 
 parser$add_argument(
-  "--index2", type = "character", default = "NA", 
-  help = desc$index2
+  "--idx2", type = "character", default = "NA", 
+  help = desc$idx2
 )
 
 parser$add_argument(
   "-o", "--outfolder", nargs = 1, type = "character", 
   help = desc$outfolder
+)
+
+parser$add_argument(
+  "--bc1", nargs = 1, type = "character", default = "I1", 
+  help = desc$bc1
+)
+
+parser$add_argument(
+  "--bc2", nargs = 1, type = "character", default = "I2", 
+  help = desc$bc2
+)
+
+parser$add_argument(
+  "--bc1Len", nargs = 1, type = "integer", default = 8, 
+  help = desc$bc1Len
+)
+
+parser$add_argument(
+  "--bc2Len", nargs = 1, type = "integer", default = 8,
+  help = desc$bc2Len
+)
+
+parser$add_argument(
+  "--maxMis", nargs = 1, type = "integer", 
+  help = desc$maxMis
+)
+
+parser$add_argument(
+  "--bc1Mis", nargs = 1, type = "integer", default = 0, 
+  help = desc$bc1Mis
+)
+
+parser$add_argument(
+  "--bc2Mis", nargs = 1, type = "integer", default = 0,
+  help = desc$bc2Mis
+)
+
+parser$add_argument(
+  "--stat", nargs = 1, type = "character", default = FALSE, 
+  help = desc$stat
+)
+
+parser$add_argument(
+  "-c", "--cores", nargs = 1, default = 1, type = "integer", 
+  help = desc$cores
+)
+
+parser$add_argument(
+  "--compress", action = "store_true", 
+  help = desc$compress
 )
 
 parser$add_argument(
@@ -64,59 +111,9 @@ parser$add_argument(
 )
 
 parser$add_argument(
-  "--barcode1", nargs = 1, type = "character", default = "I1", 
-  help = desc$barcode1
-)
-
-parser$add_argument(
-  "--barcode2", nargs = 1, type = "character", default = "I2", 
-  help = desc$barcode2
-)
-
-parser$add_argument(
-  "--barcode1Length", nargs = 1, type = "integer", default = 8, 
-  help = desc$barcode1Length
-)
-
-parser$add_argument(
-  "--barcode2Length", nargs = 1, type = "integer", default = 8,
-  help = desc$barcode2Length
-)
-
-parser$add_argument(
-  "--maxMismatch", nargs = 1, type = "integer", 
-  help = desc$maxMismatch
-)
-
-parser$add_argument(
-  "--bc1Mismatch", nargs = 1, type = "integer", default = 0, 
-  help = desc$bc1Mismatch
-)
-
-parser$add_argument(
-  "--bc2Mismatch", nargs = 1, type = "integer", default = 0,
-  help = desc$bc2Mismatch
-)
-
-parser$add_argument(
-  "--stat", nargs = 1, type = "character", default = FALSE, 
-  help = desc$stat
-)
-
-parser$add_argument(
   "--readNamePattern", nargs = 1, type = "character", 
   default = "[\\w\\:\\-\\+]+", 
-  help = desc$readNamePattern
-)
-
-parser$add_argument(
-  "--compress", action = "store_true", 
-  help = desc$compress
-)
-
-parser$add_argument(
-  "-c", "--cores", nargs = 1, default = 1, type = "integer", 
-  help = desc$cores
+  help = desc$readNamePatter
 )
 
 
@@ -125,32 +122,32 @@ args <- parser$parse_args(commandArgs(trailingOnly = TRUE))
 
 demulti <- data.frame(
   "readType" = c("R1", "R2", "I1", "I2"),
-  "path" = c(args$read1, args$read2, args$index1, args$index2)
+  "path" = c(args$read1, args$read2, args$idx1, args$idx2)
 )
 
-demulti$barcode1 <- grepl(args$barcode1, demulti$readType)
-demulti$barcode2 <- grepl(args$barcode2, demulti$readType)
+demulti$bc1 <- grepl(args$bc1, demulti$readType)
+demulti$bc2 <- grepl(args$bc2, demulti$readType)
 
 
-if( demulti$readType[demulti$barcode1] == demulti$readType[demulti$barcode2] ){
+if( demulti$readType[demulti$bc1] == demulti$readType[demulti$bc2] ){
   stop("Please select different read types for barcodes 1 and 2.")
 }
 
-if( demulti$readType[demulti$barcode1] == "NA" ){
+if( demulti$readType[demulti$bc1] == "NA" ){
   stop("Barcode 1 is set to a read type that is not provided.")
 }
 
-if( demulti$readType[demulti$barcode2] == "NA" ){
+if( demulti$readType[demulti$bc2] == "NA" ){
   stop("Barcode 2 is set to a read type that is not provided.")
 }
 
 if( args$singleBarcode ){
-  demulti$barcode2 <- FALSE
+  demulti$bc2 <- FALSE
 }
 
-if( !is.null(args$maxMisMatch) ){
-  args$bc1Mismatch <- args$maxMismatch
-  args$bc2Mismatch <- args$maxMismatch
+if( !is.null(args$maxMis) ){
+  args$bc1Mis <- args$maxMis
+  args$bc2Mis <- args$maxMis
 }
 
 
@@ -163,19 +160,19 @@ input_table <- data.frame(
 
 input_table <- input_table[
   match(
-    c("manifest :", "index1 :", "index2 :", "read1 :", "read2 :", 
-      "outfolder :", "stat :", "poolreps :", "singleBarcode :", "cores :", 
-      "barcode1 :", "barcode2 :", "barcode1Length :", "barcode2Length :", 
-      "bc1Mismatch :", "bc2Mismatch :", "readNamePattern :"),
+    c("manifest :", "idx1 :", "idx2 :", "read1 :", "read2 :", 
+      "outfolder :", "stat :", "bc1 :", "bc2 :", "bc1Len :", "bc2Len :", 
+      "bc1Mis :", "bc2Mis :", "cores :", "compress :", "poolreps :", 
+      "singleBarcode :",  "readNamePattern :"),
     input_table$Variables
   ),
 ]
 
-pandoc.title("Demultiplex Inputs")
-pandoc.table(
-  data.frame(input_table, row.names = NULL), 
-  justify = c("left", "left"), 
-  split.tables = Inf
+cat("Demultiplex Inputs:")
+print(
+  x = data.frame(input_table, row.names = NULL), 
+  right = FALSE, 
+  row.names = FALSE
 )
 
 # Create output directory if not currently available ----
@@ -192,11 +189,14 @@ present_packs <- required_packs %in% row.names(installed.packages())
 
 if( !all(present_packs) ){
   
-  pandoc.table(data.frame(
-    "R-Packages" = required_packs, 
-    "Installed" = present_packs, 
-    row.names = NULL
-  ))
+  cat("\nMissing required r-packages:")
+  print(
+    data.frame(
+      "R-Packages" = required_packs, 
+      "Installed" = present_packs, 
+      row.names = NULL
+    ), right = FALSE, row.names = FALSE)
+
   stop("Check dependancies.")
 
 }
@@ -288,7 +288,7 @@ if( fileExt %in% c("yaml", "yml") ){
     
     samples_df <- data.frame(
       "sampleName" = names(manifest$samples),
-      "barcode1" = sapply( manifest$samples, function(x) x$barcode1 ),
+      "bc1" = sapply( manifest$samples, function(x) x$bc1 ),
       row.names = NULL
     )
   
@@ -296,8 +296,8 @@ if( fileExt %in% c("yaml", "yml") ){
     
     samples_df <- data.frame(
       "sampleName" = names(manifest$samples),
-      "barcode1" = sapply( manifest$samples, function(x) x$barcode1 ),
-      "barcode2" = sapply( manifest$samples, function(x) x$barcode2 ),
+      "bc1" = sapply( manifest$samples, function(x) x$bc1 ),
+      "bc2" = sapply( manifest$samples, function(x) x$bc2 ),
       row.names = NULL
     )
   
@@ -312,9 +312,9 @@ if( fileExt %in% c("yaml", "yml") ){
   }
   
   if( args$singleBarcode ){
-    samples_df <- manifest[, c("sampleName", "barcode1")]
+    samples_df <- manifest[, c("sampleName", "bc1")]
   }else{
-    samples_df <- manifest[, c("sampleName", "barcode1", "barcode2")]
+    samples_df <- manifest[, c("sampleName", "bc1", "bc2")]
   }
   
 }
@@ -322,23 +322,23 @@ if( fileExt %in% c("yaml", "yml") ){
 
 if( !args$singleBarcode ){
   
-  uniqueSamples <- nrow(samples_df[,c("barcode1", "barcode2")]) == 
-    nrow(unique(samples_df[,c("barcode1", "barcode2")]))
+  uniqueSamples <- nrow(samples_df[,c("bc1", "bc2")]) == 
+    nrow(unique(samples_df[,c("bc1", "bc2")]))
   
   if( !uniqueSamples ) stop("Ambiguous barcoding of samples. Please correct.")
 
 }else{
 
-  uniqueSamples <- length(samples_df[,c("barcode1")]) == 
-    length(unique(samples_df[,"barcode1"]))
+  uniqueSamples <- length(samples_df[,c("bc1")]) == 
+    length(unique(samples_df[,"bc1"]))
   
   if( !uniqueSamples ) stop("Ambiguous barcoding of samples. Please correct.")
 
 }
 
 # Read in barcode sequences ----
-barcode1_reads <- ShortRead::readFastq(demulti$path[demulti$barcode1])
-message(paste("Reads to demultiplex : ", length(barcode1_reads)))
+bc1_reads <- ShortRead::readFastq(demulti$path[demulti$bc1])
+message(paste("Reads to demultiplex : ", length(bc1_reads)))
 
 if( args$cores > 1 ){
   
@@ -346,32 +346,35 @@ if( args$cores > 1 ){
   
   BC1_parsed <-  parallel::parLapply(
     cluster,
-    unique(samples_df$barcode1), 
+    unique(samples_df$bc1), 
     parseIndexReads,
-    index.file.path = demulti$path[demulti$barcode1],
-    barcode.length = args$barcode1Length,
-    max.mismatch = args$bc1Mismatch,
+    index.file.path = demulti$path[demulti$bc1],
+    barcode.length = args$bc1Len,
+    max.mismatch = args$bc1Mis,
     read.name.pattern = args$readNamePattern
   )
   
-  names(BC1_parsed) <- unique(samples_df$barcode1)
+  names(BC1_parsed) <- unique(samples_df$bc1)
   
-  pandoc.title("Barcode1 breakdown:")
-  pandoc.table(data.frame(
-    "Barcode1" = names(BC1_parsed),
-    "Read Counts" = sapply( BC1_parsed, length ),
-    row.names = NULL
-  ))
+  cat("\nbc1 breakdown:")
+  print(
+    data.frame(
+      "bc1" = names(BC1_parsed),
+      "Read Counts" = sapply( BC1_parsed, length )
+    ),
+    right = TRUE, 
+    row.names = FALSE
+  )
   
   if( !args$singleBarcode ){
     
     BC2_parsed <- parallel::parLapply(
       cluster, 
-      unique(samples_df$barcode2), 
+      unique(samples_df$bc2), 
       parseIndexReads,
-      index.file.path = demulti$path[demulti$barcode2],
-      barcode.length = args$barcode2Length,
-      max.mismatch = args$bc2Mismatch,
+      index.file.path = demulti$path[demulti$bc2],
+      barcode.length = args$bc2Len,
+      max.mismatch = args$bc2Mis,
       read.name.pattern = args$readNamePattern
     )
     
@@ -382,31 +385,34 @@ if( args$cores > 1 ){
 }else{
   
   BC1_parsed <-  lapply(
-    unique(samples_df$barcode1), 
+    unique(samples_df$bc1), 
     parseIndexReads,
-    index.file.path = demulti$path[demulti$barcode1],
-    barcode.length = args$barcode1Length,
-    max.mismatch = args$bc1Mismatch,
+    index.file.path = demulti$path[demulti$bc1],
+    barcode.length = args$bc1Len,
+    max.mismatch = args$bc1Mis,
     read.name.pattern = args$readNamePattern
   )
 
-  names(BC1_parsed) <- unique(samples_df$barcode1)
+  names(BC1_parsed) <- unique(samples_df$bc1)
   
-  pandoc.title("Barcode1 breakdown:")
-  pandoc.table(data.frame(
-    "Barcode1" = names(BC1_parsed),
-    "Read Counts" = sapply( BC1_parsed, length ),
-    row.names = NULL
-  ))
+  cat("\nbc1 breakdown:")
+  print(
+    data.frame(
+      "bc1" = names(BC1_parsed),
+      "Read Counts" = sapply( BC1_parsed, length )
+    ),
+    right = TRUE, 
+    row.names = FALSE
+  )
   
   if( !args$singleBarcode ){
     
     BC2_parsed <- lapply(
-      unique(samples_df$barcode2), 
+      unique(samples_df$bc2), 
       parseIndexReads,
-      index.file.path = demulti$path[demulti$barcode2],
-      barcode.length = args$barcode2Length,
-      max.mismatch = args$bc2Mismatch,
+      index.file.path = demulti$path[demulti$bc2],
+      barcode.length = args$bc2Len,
+      max.mismatch = args$bc2Mis,
       read.name.pattern = args$readNamePattern
     )
     
@@ -416,29 +422,32 @@ if( args$cores > 1 ){
 
 if( !args$singleBarcode ){
 
-  names(BC2_parsed) <- unique(samples_df$barcode2)
-  pandoc.title("Barcode2 breakdown:")
-  pandoc.table(data.frame(
-    "Barcode2" = names(BC2_parsed),
-    "Read Counts" = sapply(BC2_parsed, length),
-    row.names = NULL
-  ))
+  names(BC2_parsed) <- unique(samples_df$bc2)
+  cat("\nbc2 breakdown:")
+  print(
+    data.frame(
+      "bc2" = names(BC2_parsed),
+      "Read Counts" = sapply(BC2_parsed, length)
+    ),
+    right = TRUE,
+    row.names = FALSE
+  )
 
 }
 
 if( !args$singleBarcode ){
   
   demultiplexed_indices <- mapply(
-    function(barcode1, barcode2){
-      Biostrings::intersect(BC1_parsed[[barcode1]], BC2_parsed[[barcode2]])
+    function(bc1, bc2){
+      Biostrings::intersect(BC1_parsed[[bc1]], BC2_parsed[[bc2]])
     },
-    barcode1 = samples_df$barcode1,
-    barcode2 = samples_df$barcode2,
+    bc1 = samples_df$bc1,
+    bc2 = samples_df$bc2,
     SIMPLIFY = FALSE
   )
   
   names(demultiplexed_indices) <- paste0(
-    samples_df$barcode1, samples_df$barcode2
+    samples_df$bc1, samples_df$bc2
   )
   
 }else{
@@ -462,14 +471,14 @@ demultiplexed_indices <- lapply(demultiplexed_indices, function(x, reads){
 
 # Reads by sample
 samples_df$read_counts <- sapply( demultiplexed_indices, length )
-pandoc.title("Read counts for each sample.")
-pandoc.table(samples_df, split.tables = Inf)
+cat("\nRead counts for each sample.")
+print(samples_df, split.tables = Inf)
 
 # Ambiguous reads
-message(paste0("Ambiguous reads: ", length(ambiguous_indices)))
+message(paste0("\nAmbiguous reads: ", length(ambiguous_indices)))
 
 # Unassigned reads
-all_indices <- seq_along(barcode1_reads)
+all_indices <- seq_along(bc1_reads)
 
 unassigned_indices <- all_indices[
   !all_indices %in% unlist(demultiplexed_indices, use.names = FALSE)
@@ -479,7 +488,7 @@ unassigned_indices <- unassigned_indices[
   !unassigned_indices %in% ambiguous_indices
 ]
 
-message(paste0("\nUnassigned reads: ", length(unassigned_indices)))
+print(paste0("\nUnassigned reads: ", length(unassigned_indices)))
 
 if( args$stat != FALSE ){
   write.table(
@@ -534,7 +543,7 @@ if( args$poolreps ){
   multiplexed_data$sampleName <- gsub("-\\d+$", "", multiplexed_data$sampleName)
 }
 
-message(paste0("\nReads to be written to files: ", nrow(multiplexed_data)))
+cat(paste0("Reads to be written to files: ", nrow(multiplexed_data)))
 
 # Write files to read files to outfolder directory
 if( args$cores > 1 ){

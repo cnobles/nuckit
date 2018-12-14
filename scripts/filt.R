@@ -8,9 +8,6 @@
 
 # Set Global options and load intiial packages ---------------------------------
 options(stringsAsFactors = FALSE, scipen = 99)
-suppressMessages(library("pander"))
-panderOptions("table.style", "simple")
-panderOptions("table.split.table", Inf)
 
 code_dir <- dirname(sub("--file=", "", grep(
   "--file=", commandArgs(trailingOnly = FALSE), value = TRUE)))
@@ -20,36 +17,62 @@ desc <- yaml::yaml.load_file(file.path(code_dir, "filt.desc.yml"))
 
 # Set up arguments and workflow of script --------------------------------------
 ## Argument parser =============================================================
-parser <- argparse::ArgumentParser(
-  description = desc$program_short_description)
+parser <- argparse::ArgumentParser(description = desc$program_short_description)
+
 parser$add_argument(
-  "seqFile", nargs = "+", type = "character", help = desc$seqFile)
+  "seqFile", nargs = "+", type = "character", help = desc$seqFile
+)
+
 parser$add_argument(
-  "-o", "--output", nargs = "+", type = "character", help = desc$output)
+  "-o", "--output", nargs = "+", type = "character", help = desc$output
+)
+
 parser$add_argument(
-  "-i", "--index", nargs = "*", type = "character", help = desc$index)
+  "-i", "--index", nargs = "*", type = "character", help = desc$index
+)
+
 parser$add_argument(
-  "--header", action = "store_true", help = desc$header)
-parser$add_argument(
-  "-n", "--negSelect", action = "store_true", help = desc$negSelect)
-parser$add_argument(
-  "-s", "--seq", nargs = "*", type = "character", help = desc$seq)
+  "-s", "--seq", nargs = "*", type = "character", help = desc$seq
+)
+
 parser$add_argument(
   "-m", "--mismatch", nargs = "+", type = "integer", default = 0, 
-  help = desc$mismatch)
-parser$add_argument(
-  "--any", action = "store_true", help = desc$any)
+  help = desc$mismatch
+)
+
 parser$add_argument(
   "--readNamePattern", nargs = 1, type = "character", default = "[\\w:-]+",
-  help = desc$readNamePattern)
+  help = desc$readNamePattern
+)
+
 parser$add_argument(
-  "--compress", action = "store_true", help = desc$compress)
+  "-c", "--cores", nargs = 1, default = 1, type = "integer", help = desc$cores
+)
+
 parser$add_argument(
-  "-c", "--cores", nargs = 1, default = 1, type = "integer", help = desc$cores)
+  "--stat", nargs = 1, default = FALSE, type = "character", help = desc$stat
+)
+
 parser$add_argument(
-  "-q", "--quiet", action = "store_true", help = desc$quiet)
+  "--header", action = "store_true", help = desc$header
+)
+
 parser$add_argument(
-  "--stat", nargs = 1, default = FALSE, type = "character", help = desc$stat)
+  "-n", "--negSelect", action = "store_true", help = desc$negSelect
+)
+
+parser$add_argument(
+  "--any", action = "store_true", help = desc$any
+)
+
+parser$add_argument(
+  "--compress", action = "store_true", help = desc$compress
+)
+
+parser$add_argument(
+  "-q", "--quiet", action = "store_true", help = desc$quiet
+)
+
 
 
 ## Parse cmd line args =========================================================
@@ -170,13 +193,13 @@ input_table <- input_table[
 
 if( !args$quiet ){
   
-  pandoc.title("seqFiltR Inputs")
-  pandoc.table(
+  cat("Filter Inputs:")
+  print(
     data.frame(input_table, row.names = NULL), 
-    justify = c("left", "left"), 
-    split.tables = Inf,
-    caption = paste0("Filtering methods include ", filt_type)
+    right = FALSE, 
+    row.names = FALSE
   )
+  cat(paste0("\nFiltering methods include ", filt_type))
   
 }
 

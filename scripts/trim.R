@@ -1,74 +1,109 @@
 #!/usr/bin/env Rscript
 options(stringsAsFactors = FALSE)
-suppressMessages(library("pander"))
-panderOptions("table.style", "simple")
 
 code_dir <- dirname(sub("--file=", "", grep(
   "--file=", commandArgs(trailingOnly = FALSE), value = TRUE)))
 
 desc <- yaml::yaml.load_file(file.path(code_dir, "trim.desc.yml"))
 
-#p <- argparser::arg_parser(description = desc$program_short_description, name = "nuc trim")
-#p <- argparser::add_argument(p, c("seqFile", "--output", "--leadTrimSeq"), help = unlist(desc[2:4]))
-#print(p)
-#q()
-
 #' Set up and gather command line arguments
 parser <- argparse::ArgumentParser(description = desc$program_short_description)
+
 parser$add_argument(
-  "seqFile", nargs = 1, type = "character", help = desc$seqFile)
+  "seqFile", nargs = 1, type = "character", help = desc$seqFile
+)
+
 parser$add_argument(
-  "-o", "--output", nargs = 1, type = "character", help = desc$output)
+  "-o", "--output", nargs = 1, type = "character", help = desc$output
+)
+
 parser$add_argument(
   "-l", "--leadTrimSeq", nargs = 1, type = "character", default = ".",
-  help = desc$leadTrimSeq)
+  help = desc$leadTrimSeq
+)
+
 parser$add_argument(
   "-r", "--overTrimSeq", nargs = 1, type = "character", default = ".",
-  help = desc$overTrimSeq)
+  help = desc$overTrimSeq
+)
+
 parser$add_argument(
   "--phasing", nargs = 1, type = "integer", default = 0, 
-  help = desc$phasing)
+  help = desc$phasing
+)
+
 parser$add_argument(
-  "--maxMismatch", nargs = 1, type = "integer", help = desc$maxMismatch)
+  "--maxMismatch", nargs = 1, type = "integer", help = desc$maxMismatch
+)
+
 parser$add_argument(
   "--leadMismatch", nargs = "+", type = "integer", default = 0,
-  help = desc$leadMismatch)
+  help = desc$leadMismatch
+)
+
 parser$add_argument(
   "--overMismatch", nargs = 1, type = "integer", default = 0,
-  help = desc$overMismatch)
+  help = desc$overMismatch
+)
+
 parser$add_argument(
   "--overMaxLength", nargs = 1, type = "integer", default = 20,
-  help = desc$overMaxLength)
+  help = desc$overMaxLength
+)
+
 parser$add_argument(
   "--overMinLength", nargs = 1, type = "integer", default = 3,
-  help = desc$overMinLength)
+  help = desc$overMinLength
+)
+
 parser$add_argument(
   "--minSeqLength", nargs = 1, type = "integer", default = 30,
-  help = desc$minSeqLength)
+  help = desc$minSeqLength
+)
+
 parser$add_argument(
   "--collectRandomIDs", nargs = "+", type = "character", default = FALSE,
-  help = desc$collectRandomIDs)
-parser$add_argument(
-  "--noFiltering", action = "store_true",
-  help = desc$noFiltering)
-parser$add_argument(
-  "--noQualTrimming", action = "store_true",
-  help = desc$noQualTrimming)
+  help = desc$collectRandomIDs
+)
+
 parser$add_argument(
   "--badQualBases", nargs = 1, type = "integer", default = 5,
-  help = desc$basQualBases)
+  help = desc$basQualBases
+)
+
 parser$add_argument(
   "--qualSlidingWindow", nargs = 1, type = "integer", default = 10,
-  help = desc$qualSlidingWindow)
+  help = desc$qualSlidingWindow
+)
+
 parser$add_argument(
   "--qualThreshold", nargs = 1, type = "character", default = '?',
-  help = desc$qualThreshold)
+  help = desc$qualThreshold
+)
+
 parser$add_argument(
-  "--stat", nargs = 1, type = "character", default = FALSE, help = desc$stat)
+  "--stat", nargs = 1, type = "character", default = FALSE, help = desc$stat
+)
+
 parser$add_argument(
-  "--compress", action = "store_true", help = desc$compress)
+  "-c", "--cores", nargs = 1, default = 1, type = "integer", help = desc$cores
+)
+
 parser$add_argument(
-  "-c", "--cores", nargs = 1, default = 1, type = "integer", help = desc$cores)
+  "--compress", action = "store_true", help = desc$compress
+)
+
+parser$add_argument(
+  "--noFiltering", action = "store_true",
+  help = desc$noFiltering
+)
+
+parser$add_argument(
+  "--noQualTrimming", action = "store_true",
+  help = desc$noQualTrimming
+)
+
+
 
 args <- parser$parse_args(commandArgs(trailingOnly = TRUE))
 
@@ -123,11 +158,11 @@ input_table <- input_table[
     input_table$Variables)
   ,]
 
-pandoc.title("seqTrimR Inputs")
-pandoc.table(
+cat("Trim Inputs:")
+print(
   data.frame(input_table, row.names = NULL), 
-  justify = c("left", "left"), 
-  split.tables = Inf
+  right = FALSE, 
+  row.names = FALSE
 )
 
 # Reduce number of requested cores if needed.
@@ -173,13 +208,14 @@ if( seq_type == "fasta" ){
 
 # Log info
 input_tbl <- logSeqData(seqs)
-pandoc.table(input_tbl, caption = "Input sequence information.")
+cat("\nInput sequence information:")
+print(input_tbl, row.names = FALSE)
 
 # If no reads remaining, terminate and write output
 if( length(seqs) == 0 ){
   
   message(
-    "No reads remaining to trim. Terminating script after writing output."
+    "\nNo reads remaining to trim. Terminating script after writing output."
   )
   
   writeNullFile(
@@ -209,10 +245,8 @@ if( !args$noQualTrimming & seq_type == "fastq" ){
   
   # Log info
   qual_trimmed_tbl <- logSeqData(seqs)
-  pandoc.table(
-    qual_trimmed_tbl, 
-    caption = "Sequence information remaining after quality trimming."
-  )
+  cat("\nSequence information remaining after quality trimming:")
+  print(qual_trimmed_tbl, row.names = FALSE)
   
 }
 
@@ -242,10 +276,8 @@ seqs <- seqs[
 ]
 
 len_trimmed_tbl <- logSeqData(seqs)
-pandoc.table(
-  len_trimmed_tbl, 
-  caption = "Sequence information remaining after minimum length trimming."
-)
+cat("\nSequence information remaining after minimum length trimming:")
+print(len_trimmed_tbl, row.names = FALSE)
 
 # Trim sequences, either on a single core or multiple cores
 if( args$cores <= 1 ){
@@ -277,10 +309,8 @@ if( args$cores <= 1 ){
   
   # Log info
   lead_trimmed_tbl <- logSeqData(trimmed_seqs)
-  pandoc.table(
-    lead_trimmed_tbl, 
-    caption = "Sequence information remaining after lead trimming."
-  )
+  cat("\nSequence information remaining after lead trimming:")
+  print(lead_trimmed_tbl, row.names = FALSE)
   
   # Overread trimming
   if( nchar(args$overTrimSeq) > 0 ){
@@ -300,10 +330,8 @@ if( args$cores <= 1 ){
     
     # Log info
     over_trimmed_tbl <- logSeqData(trimmed_seqs)
-    pandoc.table(
-      over_trimmed_tbl, 
-      caption = "Sequence information remaining after overreading trimming."
-    )
+    cat("\nSequence information remaining after overreading trimming:")
+    print(over_trimmed_tbl, row.names = FALSE)
     
   }
   
@@ -358,10 +386,8 @@ if( args$cores <= 1 ){
   
   # Log info
   lead_trimmed_tbl <- logSeqData(trimmed_seqs)
-  pandoc.table(
-    lead_trimmed_tbl,
-    caption = "Sequence information remaining after lead trimming."
-  )
+  cat("\nSequence information remaining after lead trimming:")
+  print(lead_trimmed_tbl, row.names = FALSE)
   
   # The method for overread trimming sequentially aligns shorter fragments of 
   # the overTrimSeq, and solely requiring mismatches could lead to some issues.
@@ -392,10 +418,8 @@ if( args$cores <= 1 ){
     
     # Log info
     over_trimmed_tbl <- logSeqData(trimmed_seqs)
-    pandoc.table(
-      over_trimmed_tbl, 
-      caption = "Sequence information remaining after overreading trimming."
-    )
+    cat("\nSequence information remaining after overreading trimming:")
+    print(over_trimmed_tbl, row.names = FALSE)
     
   }
   
@@ -409,7 +433,7 @@ if( args$cores <= 1 ){
 if( length(seqs) == 0 ){
   
   message(
-    "No reads remaining to trim. Terminating script after writing output."
+    "\nNo reads remaining to trim. Terminating script after writing output."
   )
   
   writeNullFile(
@@ -425,7 +449,9 @@ if( length(seqs) == 0 ){
 
 
 # Second check for sequences below minimum length
-trimmed_seqs <- trimmed_seqs[Biostrings::width(trimmed_seqs) >= args$minSeqLength]
+trimmed_seqs <- trimmed_seqs[
+  Biostrings::width(trimmed_seqs) >= args$minSeqLength
+]
 
 # Recover filtered reads if requested
 if( args$noFiltering ){
@@ -451,10 +477,8 @@ if( args$noFiltering ){
 
 # Log info
 final_trimmed_tbl <- logSeqData(output_seqs)
-pandoc.table(
-  final_trimmed_tbl, 
-  caption = "Sequence information remaining."
-)
+cat("\nSequence information remaining:")
+print(final_trimmed_tbl, row.names = FALSE)
 
 
 # Write stats if requested
@@ -534,6 +558,6 @@ if( all(args$collectRandomIDs != FALSE) ){
   
 }
 
-cat("Script completed.\n")
+cat("\nScript completed.\n")
 
 q()

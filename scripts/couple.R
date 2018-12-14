@@ -8,7 +8,6 @@
 
 #!/usr/bin/env Rscript
 options(stringsAsFactors = FALSE, scipen = 99)
-suppressMessages(library("pander"))
 
 code_dir <- dirname(
   sub("--file=", "", grep("--file=", commandArgs(trailingOnly = FALSE), value = TRUE)))
@@ -17,44 +16,77 @@ desc <- yaml::yaml.load_file(file.path(code_dir, "couple.desc.yml"))
 
 # Set up and gather command line arguments
 parser <- argparse::ArgumentParser(description = desc$program_short_description)
+
 parser$add_argument(
-  "anchorPSL", nargs = 1, type = "character", help = desc$anchorPSL)
+  "anchorPSL", nargs = 1, type = "character", help = desc$anchorPSL
+)
+
 parser$add_argument(
-  "adriftPSL", nargs = 1, type = "character", help = desc$adriftPSL)
+  "adriftPSL", nargs = 1, type = "character", help = desc$adriftPSL
+)
+
 parser$add_argument(
-  "-k", "--keys", nargs = "*", type = "character", help = desc$keys)
+  "-k", "--keys", nargs = "*", type = "character", help = desc$keys
+)
+
 parser$add_argument(
-  "-o", "--uniqOutput", nargs = 1, type = "character", help = desc$uniqOutput)
+  "-o", "--uniqOutput", nargs = 1, type = "character", help = desc$uniqOutput
+)
+
 parser$add_argument(
-  "--condSites", nargs = 1, type = "character", help = desc$condSites)
+  "--condSites", nargs = 1, type = "character", help = desc$condSites
+)
+
 parser$add_argument(
-  "--chimeras", nargs = 1, type = "character", help = desc$chimeras)
+  "--chimeras", nargs = 1, type = "character", help = desc$chimeras
+)
+
 parser$add_argument(
-  "--multihits", nargs = 1, type = "character", help = desc$multihits)
+  "--multihits", nargs = 1, type = "character", help = desc$multihits
+)
+
 parser$add_argument(
-  "--stat", nargs = 1, type = "character", default = FALSE, help = desc$stat)
+  "--stat", nargs = 1, type = "character", default = FALSE, help = desc$stat
+)
+
 parser$add_argument(
   "-g", "--refGenome", nargs = 1, type = "character", default = "hg38",
-  help = desc$refGenome)
+  help = desc$refGenome
+)
+
 parser$add_argument(
   "--maxAlignStart", nargs = 1, type = "integer", default = 5L,
-  help = desc$maxAlignStart)
+  help = desc$maxAlignStart
+)
+
 parser$add_argument(
   "--minPercentIdentity", nargs = 1, type = "integer", default = 95L,
-  help = desc$minPercentIdentity)
+  help = desc$minPercentIdentity
+)
+
 parser$add_argument(
   "--minTempLength", nargs = 1, type = "integer", default = 30L,
-  help = desc$minTempLength)
+  help = desc$minTempLength
+)
+
 parser$add_argument(
   "--maxTempLength", nargs = 1, type = "integer", default = 2500L,
-  help = desc$maxTempLength)
+  help = desc$maxTempLength
+)
+
 parser$add_argument(
-  "--keepAltChr", action = "store_true", help = desc$keepAltChr)
+  "--keepAltChr", action = "store_true", help = desc$keepAltChr
+)
+
 parser$add_argument(
-  "--readNamePattern", nargs = 1, type = "character", default = "[\\w\\:\\-\\+]+",
-  help = desc$readNamePattern)
+  "--readNamePattern", nargs = 1, type = "character", 
+  default = "[\\w\\:\\-\\+]+", help = desc$readNamePattern
+)
+
 parser$add_argument(
-  "--saveImage", nargs = 1, type = "character", help = desc$saveImage)
+  "--saveImage", nargs = 1, type = "character", help = desc$saveImage
+)
+
 
 args <- parser$parse_args(commandArgs(trailingOnly = TRUE))
 
@@ -85,16 +117,15 @@ input_table <- input_table[
   ),
 ]
 
-pandoc.title("blatCoupleR Inputs")
-pandoc.table(
-  data.frame(input_table, row.names = NULL),
-  justify = c("left", "left"), 
-  split.tables = Inf,
-  style = "simple"
+cat("Coupler Inputs:")
+print(
+  data.frame(input_table),
+  right = FALSE, 
+  row.names = FALSE
 )
 
 # Load supporting scripts
-source(file.path(code_dir, "supporting_scripts", "panderHead.R"))
+source(file.path(code_dir, "supporting_scripts", "printHead.R"))
 
 source(file.path(code_dir, "supporting_scripts", "readKeyFile.R"))
 
@@ -109,7 +140,7 @@ source(file.path(code_dir, "supporting_scripts", "condenseSites.R"))
 source(file.path(code_dir, "supporting_scripts", "writeOutputFile.R"))
 
 if( !all(
-  c("panderHead", "readKeyFile", "readPSL", "qualityFilter", 
+  c("printHead", "readKeyFile", "readPSL", "qualityFilter", 
     "processBLATData", "condenseSites", "writeOutputFile") %in% ls())
 ){
   stop(
@@ -125,7 +156,10 @@ if( grepl(".fa", args$refGenome) ){
   }
   
   ref_file_type <- ifelse(grepl(".fastq", args$refGenome), "fastq", "fasta")
-  ref_genome <- readDNAStringSet(args$refGenome, format = ref_file_type)
+  
+  ref_genome <- Biostrings::readDNAStringSet(
+    args$refGenome, format = ref_file_type
+  )
   
 }else{
   
@@ -250,7 +284,7 @@ if( length(args$keys) > 1 ){
   keys$readPairKey <- paste0(keys$anchorKey, ":", keys$adriftKey)
   
   # Print beginning of keys
-  panderHead(
+  printHead(
     keys, 
     title = "Beginning of Key for relating reads to sequences.",
     caption = paste0(
@@ -287,7 +321,7 @@ if( length(args$keys) > 1 ){
   keys$readPairKey <- paste0(keys$anchorKey, ":", keys$adriftKey)
   
   # Print beginning of keys
-  panderHead(
+  printHead(
     keys, 
     title = "Beginning of Key for relating reads to sequences.",
     caption = paste0(
@@ -346,7 +380,7 @@ if( is.null(args$keys) ){
   keys$readPairKey <- paste0(keys$anchorKey, ":", keys$adriftKey)
 
   # Print beginning of keys
-  panderHead(
+  printHead(
     keys, 
     title = "Beginning of Key for relating reads to sequences.",
     caption = paste0(
@@ -426,7 +460,7 @@ adrift_hits <- processBLATData(
 adrift_hits$adriftKey <- match(adrift_hits$qName, levels(keys$adriftSeqID))
 
 # Info after quality filtering individual alignments.
-panderHead(
+printHead(
   anchor_hits,
   title = "Head of filtered anchor alignments.",
   caption = sprintf(
@@ -436,7 +470,7 @@ panderHead(
   )
 )
 
-panderHead(
+printHead(
   adrift_hits,
   title = "Head of filtered adrift alignments.",
   caption = sprintf(
@@ -701,7 +735,7 @@ paired_loci <- GenomicRanges::GRanges(
 )
 
 #' Information on valid paired alignments from all sequences present.
-panderHead(
+printHead(
   paired_loci,
   title = "Head of valid paired loci present in the data.",
   caption = sprintf("Genomic loci: %s", length(paired_loci))
@@ -848,7 +882,7 @@ names(uniq_sites) <- NULL
 writeOutputFile(uniq_sites, file = args$uniqOutput)
 
 # Print out head of uniq_sites for reference.
-panderHead(
+printHead(
   uniq_sites,
   title = "Head of uniquely mapped genomic loci.",
   caption = sprintf(
@@ -886,7 +920,7 @@ if( !is.null(args$condSites) ){
   
   writeOutputFile(cond_sites, file = args$condSites)
   
-  panderHead(
+  printHead(
     cond_sites,
     title = "Head of unique anchor sites.",
     caption = sprintf(

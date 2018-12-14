@@ -1,8 +1,8 @@
 # Check installed packages for seqFiltR dependencies
 packs <- c(
   "ShortRead", "Biostrings", "GenomicRanges", "IRanges",
-  "S4Vectors", "igraph", "Matrix", "data.table", "stringr", 
-  "parallel", "yaml", "argparse"
+  "BSgenome", "S4Vectors", "igraph", "Matrix", "data.table", 
+  "stringr", "parallel", "yaml", "argparse"
 )
 
 present <- packs %in% row.names(installed.packages())
