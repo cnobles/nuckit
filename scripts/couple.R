@@ -9,10 +9,15 @@
 #!/usr/bin/env Rscript
 options(stringsAsFactors = FALSE, scipen = 99)
 
-code_dir <- dirname(
-  sub("--file=", "", grep("--file=", commandArgs(trailingOnly = FALSE), value = TRUE)))
+code_dir <- dirname(sub(
+  pattern = "--file=", 
+  replacement = "", 
+  x = grep("--file=", commandArgs(trailingOnly = FALSE), value = TRUE)
+))
 
-desc <- yaml::yaml.load_file(file.path(code_dir, "couple.desc.yml"))
+desc <- yaml::yaml.load_file(
+  file.path(code_dir, "descriptions/couple.desc.yml")
+)
 
 # Set up and gather command line arguments
 parser <- argparse::ArgumentParser(description = desc$program_short_description)

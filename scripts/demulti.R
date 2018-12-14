@@ -9,12 +9,14 @@
 options(stringsAsFactors = FALSE, scipen = 99)
 
 code_dir <- dirname(sub(
-  "--file=", "", grep(
-    "--file=", commandArgs(trailingOnly = FALSE), value = TRUE
-  )
+  pattern = "--file=", 
+  replacement = "", 
+  x = grep("--file=", commandArgs(trailingOnly = FALSE), value = TRUE)
 ))
 
-desc <- yaml::yaml.load_file(file.path(code_dir, "demulti.desc.yml"))
+desc <- yaml::yaml.load_file(
+  file.path(code_dir, "descriptions/demulti.desc.yml")
+)
 
 # Set up and gather command line arguments ----
 ## Argument parser ----

@@ -9,10 +9,15 @@
 # Set Global options and load intiial packages ---------------------------------
 options(stringsAsFactors = FALSE, scipen = 99)
 
-code_dir <- dirname(sub("--file=", "", grep(
-  "--file=", commandArgs(trailingOnly = FALSE), value = TRUE)))
+code_dir <- dirname(sub(
+  pattern = "--file=", 
+  replacement = "", 
+  x = grep("--file=", commandArgs(trailingOnly = FALSE), value = TRUE)
+))
 
-desc <- yaml::yaml.load_file(file.path(code_dir, "filt.desc.yml"))
+desc <- yaml::yaml.load_file(
+  file.path(code_dir, "descriptions/filt.desc.yml")
+)
 
 
 # Set up arguments and workflow of script --------------------------------------
