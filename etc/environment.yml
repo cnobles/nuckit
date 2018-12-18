@@ -16,4 +16,6 @@ dependencies:
   - bioconductor-biostrings
   - bioconductor-shortread
   - bioconductor-bsgenome
+  - semantic_version
+  - setuptools_scm
 
