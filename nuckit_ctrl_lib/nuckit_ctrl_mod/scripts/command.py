@@ -30,7 +30,7 @@ def main(argv = sys.argv):
         help = "Path to nuckit installation. (default: %(default)s)'")
 #    parser.add_argument(
 #        "-v", "--version", action = "version",
-#        version = "%(prog)s v{}".format(ctrl_mod_lib.__version__))
+#        version = "%(prog)s v{}".format(nuckit_ctrl_lib.__version__))
 
     args, remaining = parser.parse_known_args(argv)
 
@@ -55,4 +55,4 @@ def main(argv = sys.argv):
 
 #    sys.exit(cmd.returncode)
 
-main()
+#main()

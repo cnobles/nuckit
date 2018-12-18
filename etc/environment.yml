@@ -1,0 +1,19 @@
+channels:
+  - bioconda
+  - r
+  - conda-forge
+  - bushmanlab
+  - defaults
+dependencies:
+  - r
+  - r-base
+  - r-argparse
+  - r-yaml
+  - r-stringr
+  - bioconductor-s4vectors
+  - bioconductor-iranges
+  - bioconductor-genomicranges
+  - bioconductor-biostrings
+  - bioconductor-shortread
+  - bioconductor-bsgenome
+

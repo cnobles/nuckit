@@ -1,4 +1,4 @@
-# Commandline Control Module
+# NucKit Commandline Control Module
 
 This directory houses a small python library that can control the input from the command line and pass it to the appropriate Rscript.
 
