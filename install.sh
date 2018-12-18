@@ -93,7 +93,7 @@ if [[ "${arg_i:?}" == "1" ]]; then
 fi
 
 # install mode for missing dependencies from cran or a cran mirror
-if [[ "${arg_r:?}" == "1" || "${arg_m:?}" == "1" ]]; then
+if [[ "${arg_r:?}" == "1" || "${arg_m:-1}" == "1" ]]; then
     __install_cran=true
     __install_mirror=${arg_m:-false}
 fi
