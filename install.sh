@@ -83,17 +83,17 @@ elif [[ "${arg_u}" = "tools" ]]; then
 fi
 
 # install without conda
-if [[ "${arg_w:-1}" != "1" ]]; then
+if [[ "${arg_w:?}" == "1" ]]; then
     __with_conda=false
 fi
 
 # ignore installation of control module
-if [[ "${arg_i:-1}" != "1" ]]; then
+if [[ "${arg_i:?}" == "1" ]]; then
     __ignore_ctrl_mod=false
 fi
 
 # install mode for missing dependencies from cran or a cran mirror
-if [[ "${arg_r:-1}" != "1" || "${arg_m:-1}" != "1" ]]; then
+if [[ "${arg_r:?}" == "1" || "${arg_m:?}" == "1" ]]; then
     __install_cran=true
     __install_mirror=${arg_m:-false}
 fi
