@@ -275,6 +275,13 @@ if [[ $__with_conda == true ]]; then
         install_environment
         __env_changed=true
     fi
+
+    # Check environment for required r-packages
+    info "Checking R-package requirements..."
+    activate_nuckit
+    install_nuckit_requirements
+    deactivate_nuckit
+
 else
     __r_installed=$(__test_r_version)
     debug "    R program:          ${__r_installed}"
