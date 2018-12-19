@@ -64,8 +64,6 @@ def main(argv = sys.argv):
 
     r_comps = ["Rscript", str(r_script)] + remaining
 
-#    cmd = subprocess.run(r_comps, shell = True)
+    cmd = subprocess.run(r_comps)
 
-#    sys.exit(cmd.returncode)
-    print(" ".join(r_comps))
-    sys.exit(0)
+    sys.exit(cmd.returncode)
