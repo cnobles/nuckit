@@ -31,10 +31,10 @@ def main(argv = sys.argv):
         help = "Path to nuckit installation. (default: %(default)s)'"
     )
 
-    parser.add_argument(
-        "-v", "--version", action = "version",
-        version = "%(prog)s v{}".format(nuckit_ctrl_lib.__version__)
-    )
+#    parser.add_argument(
+#        "-v", "--version", action = "version",
+#        version = "%(prog)s v{}".format(nuckit_ctrl_lib.__version__)
+#    )
 
     args, remaining = parser.parse_known_args(argv)
 
@@ -56,6 +56,8 @@ def main(argv = sys.argv):
 
     r_comps = ["Rscript", r_script] + remaining
 
-    cmd = subprocess.run(r_comps)
+#    cmd = subprocess.run(r_comps, shell = True)
 
-    sys.exit(cmd.returncode)
+#    sys.exit(cmd.returncode)
+    print(' '.join(r_comps))
+    sys.exit(0)
