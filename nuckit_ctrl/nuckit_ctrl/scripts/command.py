@@ -2,6 +2,7 @@ import os
 import sys
 import argparse
 import subprocess
+from pathlib import Path
 
 def main(argv = sys.argv):
 
@@ -24,7 +25,13 @@ def main(argv = sys.argv):
         add_help = False
     )
 
-    parser.add_argument("command", help = argparse.SUPPRESS, nargs = "?")
+    parser.add_argument(
+        "command", help = argparse.SUPPRESS, nargs = "?"
+    )
+
+    parser.add_argument(
+        "subcommand", help = argparse.SUPPRESS, default = 'None', nargs = "?"
+    )
 
     parser.add_argument(
         "--nuckit_dir", default = os.getenv("NUCKIT_DIR", os.getcwd()),
@@ -39,25 +46,26 @@ def main(argv = sys.argv):
     args, remaining = parser.parse_known_args(argv)
 
     sub_cmds = ["demulti", "trim", "filt", "consol", "couple"]
-    if not args.command in sub_cmds:
+    if not args.subcommand in sub_cmds:
         parser.print_help()
-        sys.stderr.write("Unrecognized subcommand, '{}'.\n".format(
-            args.command
-        ))
+        if not args.subcommand in ['None']:
+            sys.stderr.write("Unrecognized subcommand, '{}'.\n".format(
+                args.subcommand
+            ))
         sys.exit(1)
 
-    r_script = Path(args.nuckit_dir) + "/scripts/" + args.command + ".R"
-    if not r_script.exists():
+    r_script = Path(args.nuckit_dir + "/scripts/" + args.subcommand + ".R")
+    if not r_script.is_file():
         sys.stderr.write(
             "Error: Could not find a {0} in directory '{1}'\n".format(
-                (args.command + ".R"), args.nuckit_dir)
+                (args.subcommand + ".R"), args.nuckit_dir)
         )
         sys.exit(1)
 
-    r_comps = ["Rscript", r_script] + remaining
+    r_comps = ["Rscript", str(r_script)] + remaining
 
 #    cmd = subprocess.run(r_comps, shell = True)
 
 #    sys.exit(cmd.returncode)
-    print(' '.join(r_comps))
+    print(" ".join(r_comps))
     sys.exit(0)
