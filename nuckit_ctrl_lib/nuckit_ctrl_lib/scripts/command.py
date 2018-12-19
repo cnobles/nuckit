@@ -25,12 +25,16 @@ def main(argv = sys.argv):
     )
 
     parser.add_argument("command", help = argparse.SUPPRESS, nargs = "?")
+
     parser.add_argument(
         "--nuckit_dir", default = os.getenv("NUCKIT_DIR", os.getcwd()),
-        help = "Path to nuckit installation. (default: %(default)s)'")
-#    parser.add_argument(
-#        "-v", "--version", action = "version",
-#        version = "%(prog)s v{}".format(nuckit_ctrl_lib.__version__))
+        help = "Path to nuckit installation. (default: %(default)s)'"
+    )
+
+    parser.add_argument(
+        "-v", "--version", action = "version",
+        version = "%(prog)s v{}".format(nuckit_ctrl_lib.__version__)
+    )
 
     args, remaining = parser.parse_known_args(argv)
 
@@ -38,21 +42,20 @@ def main(argv = sys.argv):
     if not args.command in sub_cmds:
         parser.print_help()
         sys.stderr.write("Unrecognized subcommand, '{}'.\n".format(
-            args.command))
+            args.command
+        ))
         sys.exit(1)
 
     r_script = Path(args.nuckit_dir) + "/scripts/" + args.command + ".R"
     if not r_script.exists():
         sys.stderr.write(
             "Error: Could not find a {0} in directory '{1}'\n".format(
-                (args.command + ".R"), args.nuckit_dir))
+                (args.command + ".R"), args.nuckit_dir)
+        )
         sys.exit(1)
 
     r_comps = ["Rscript", r_script] + remaining
-    print(" ".join(r_comps))
 
-#    cmd = subprocess.run(r_comps)
+    cmd = subprocess.run(r_comps)
 
-#    sys.exit(cmd.returncode)
-
-#main()
+    sys.exit(cmd.returncode)
