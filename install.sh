@@ -196,10 +196,10 @@ function install_env_vars () {
 function install_ctrl_mod_lib () {
     if [[ $__with_conda == true ]]; then
         activate_nuckit
-        debug_capture pip install --upgrade ${__nuckit_dir}/nuckit_ctrl_lib 2>&1
+        debug_capture pip install --upgrade ${__nuckit_dir}/nuckit_ctrl 2>&1
         deactivate_nuckit
     else
-        debug_capture pip install --upgrade $__nuckit_dir/nuckit_ctrl_lib 2>&1
+        debug_capture pip install --upgrade $__nuckit_dir/nuckit_ctrl 2>&1
     fi
 
     if [[ $(__test_nuckit) != true ]]; then
