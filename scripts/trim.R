@@ -12,7 +12,10 @@ desc <- yaml::yaml.load_file(
 )
 
 #' Set up and gather command line arguments
-parser <- argparse::ArgumentParser(description = desc$program_short_description)
+parser <- argparse::ArgumentParser(
+  description = desc$program_short_description,
+  usage = "nuc trim <seqFile> [-h/--help, -v/--version] [optional args]"
+)
 
 parser$add_argument(
   "seqFile", nargs = 1, type = "character", help = desc$seqFile

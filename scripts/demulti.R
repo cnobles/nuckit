@@ -20,7 +20,10 @@ desc <- yaml::yaml.load_file(
 
 # Set up and gather command line arguments ----
 ## Argument parser ----
-parser <- argparse::ArgumentParser(description = desc$program_short_description)
+parser <- argparse::ArgumentParser(
+  description = desc$program_short_description,
+  usage = "nuc demulti [-h/--help, -v/--version] [optional args]"
+)
 
 parser$add_argument(
   "-m", "--manifest", type = "character", 
