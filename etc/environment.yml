@@ -5,7 +5,7 @@ channels:
   - bushmanlab
   - defaults
 dependencies:
-  - r
+  - r>=3.4.1
   - r-base
   - r-argparse
   - r-yaml
