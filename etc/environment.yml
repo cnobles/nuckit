@@ -6,6 +6,7 @@ channels:
   - defaults
 dependencies:
   - r>=3.4.1
+  - python<3.7.0
   - r-base
   - r-argparse
   - r-yaml
@@ -16,7 +17,4 @@ dependencies:
   - bioconductor-biostrings
   - bioconductor-shortread
   - bioconductor-bsgenome
-  - gcc_linux-64
-  - gxx_linux-64
-  - gfortran_linux-64
   - semantic_version
