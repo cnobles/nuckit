@@ -10,4 +10,4 @@ from pathlib import Path
 from pkg_resources import get_distribution
 from semantic_version import Version
 
-__version__ = str(Version.coerce(get_distribution('nuckit_ctrl_lib').version))
+__version__ = str(Version.coerce(get_distribution('nuckit_ctrl').version))

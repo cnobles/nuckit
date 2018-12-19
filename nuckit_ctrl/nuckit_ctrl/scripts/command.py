@@ -33,7 +33,7 @@ def main(argv = sys.argv):
 
 #    parser.add_argument(
 #        "-v", "--version", action = "version",
-#        version = "%(prog)s v{}".format(nuckit_ctrl_lib.__version__)
+#        version = "%(prog)s v{}".format(nuckit_ctrl.__version__)
 #    )
 
     args, remaining = parser.parse_known_args(argv)
