@@ -127,7 +127,7 @@ function __test_r_version () {
 
 function __test_r_packages () {
     if [[ $__with_conda == true ]]; then activate_nuckit; fi
-    $(Rscript ${nuckit_dir}/etc/check_for_required_packages.R > /dev/null) && \
+    $(Rscript ${__nuckit_dir}/etc/check_for_required_packages.R > /dev/null) && \
         echo true || echo false
     if [[ $__with_conda == true ]]; then deactivate_nuckit; fi
 }
@@ -233,7 +233,7 @@ function install_nuckit_requirements () {
         check_args=$(echo ${check_args} "--conda")
     fi
 
-    debug_capture Rscript ${nuckit_dir}/etc/check_for_required_packages.R \
+    debug_capture Rscript ${__nuckit_dir}/etc/check_for_required_packages.R \
         ${check_args} 2>&1 
 
     if [[ $(__test_r_packages) == false ]]; then
