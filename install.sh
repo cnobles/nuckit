@@ -249,7 +249,7 @@ if [[ $__with_conda == true ]]; then
     __env_exists=$(__test_env)
     debug "    Environment:         ${__env_exists}"
     
-    if [[ $__env_exists ]]; then
+    if [[ $__env_exists == true ]]; then
         activate_nuckit
         __nuckit_installed=$(__test_nuckit)
         deactivate_nuckit
