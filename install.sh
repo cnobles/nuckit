@@ -68,7 +68,7 @@ __nuckit_env="${arg_e:-nuckit}"
 __update_tools=false
 __update_env=false
 __with_conda=true
-__ignore_ctrl_mod=true
+__install_ctrl_mod=true
 __install_cran=false
 __install_mirror=false
 __req_r_version="3.4.1"
@@ -89,7 +89,7 @@ fi
 
 # ignore installation of control module
 if [[ "${arg_i:?}" == "1" ]]; then
-    __ignore_ctrl_mod=false
+    __install_ctrl_mod=false
 fi
 
 # install mode for missing dependencies from cran or a cran mirror
@@ -123,6 +123,13 @@ function __test_r_version () {
     else
         echo false
     fi
+}
+
+function __test_r_packages () {
+    if [[ $__with_conda == true ]]; then activate_nuckit; fi
+    $(Rscript ${nuckit_dir}/etc/check_for_required_packages.R > /dev/null) && \
+        echo true || echo false
+    if [[ $__with_conda == true ]]; then deactivate_nuckit; fi
 }
 
 function __test_env () {
@@ -199,7 +206,7 @@ function install_ctrl_mod_lib () {
         debug_capture pip install --upgrade ${__nuckit_dir}/nuckit_ctrl 2>&1
         deactivate_nuckit
     else
-        debug_capture pip install --upgrade $__nuckit_dir/nuckit_ctrl 2>&1
+        debug_capture pip install --upgrade ${__nuckit_dir}/nuckit_ctrl 2>&1
     fi
 
     if [[ $(__test_nuckit) != true ]]; then
@@ -212,7 +219,7 @@ function install_nuckit_requirements () {
         installation_error "Insufficient R-program version"
     fi
 
-    check_args=" -q"
+    local check_args=" -q"
 
     if [[ $__install_cran == true ]]; then
         if [[ $__install_mirror != false ]]; then
@@ -226,12 +233,24 @@ function install_nuckit_requirements () {
         check_args=$(echo ${check_args} "--conda")
     fi
 
-    __r_check=$(Rscript etc/check_for_required_packages.R \
-        ${check_args} &> /dev/null && echo true || echo false)
+    debug_capture Rscript ${nuckit_dir}/etc/check_for_required_packages.R \
+        ${check_args} 2>&1 
 
-    if [[ $__r_check == false ]]; then
+    if [[ $(__test_r_packages) == false ]]; then
         installation_error "R-package installation"
     fi
+}
+
+function test_nuckit_tools () {
+    if [[ $__with_conda == true ]]; then activate_nuckit; fi
+
+    if [[ $(__test_nuckit) == true ]]; then
+        debug_capture bash ${__nuckit_dir}/tests/ctrl_test.sh 2>&1
+    else
+        debug_capture bash ${__nuckit_dir}/tests/test.sh 2>&1
+    fi
+
+    if [[ $__with_conda == true ]]; then deactivate_nuckit; fi
 }
 
 
@@ -244,6 +263,7 @@ info "    NucKit src:   ${__nuckit_dir}"
 
 debug "Components detected:"
 if [[ $__with_conda == true ]]; then
+
     __conda_installed=$(__test_conda)
     debug "    Conda:               ${__conda_installed}"
     __env_exists=$(__test_env)
@@ -289,8 +309,9 @@ if [[ $__with_conda == true ]]; then
     activate_nuckit
     install_nuckit_requirements
     deactivate_nuckit
-
+    
 else
+
     __r_installed=$(__test_r_version)
     debug "    R program:          ${__r_installed}"
     __nuckit_installed=$(__test_nuckit)
@@ -304,7 +325,7 @@ else
 fi
 
 # Install ctrl module into environment if changed or requested
-if [[ $__ignore_ctrl_mod == false ]]; then
+if [[ $__install_ctrl_mod == true ]]; then
     if [[ $__env_changed = true ]]; then
         info "Environment installed/updated; (re)installing NucKit library..."
         install_ctrl_mod_lib
@@ -318,6 +339,10 @@ if [[ $__ignore_ctrl_mod == false ]]; then
         info "NucKit control module library already installed (use '--update tools' to update)"
     fi
 fi
+
+# Test NucKit tools for functionality
+info "Testing NucKit tools..."
+test_nuckit_tools
 
 # Always update the env_vars.sh in the nuckit environment
 debug "Updating \$NUCKIT_DIR variable to point to ${__nuckit_dir}"
