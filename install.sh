@@ -238,7 +238,7 @@ function install_nuckit_requirements () {
 info "Starting NucKit installation..."
 if [[ $__with_conda == true ]]; then
     info "    Conda path:   ${__conda_path}"
-    info "    NucKit env:  '${__nuckit_env}'"
+    info "    NucKit env:   ${__nuckit_env}"
 fi
 info "    NucKit src:   ${__nuckit_dir}"
 
@@ -248,7 +248,15 @@ if [[ $__with_conda == true ]]; then
     debug "    Conda:               ${__conda_installed}"
     __env_exists=$(__test_env)
     debug "    Environment:         ${__env_exists}"
-    __nuckit_installed=$(__test_nuckit)
+    
+    if [[ $__env_exists ]]; then
+        activate_nuckit
+        __nuckit_installed=$(__test_nuckit)
+        deactivate_nuckit
+    else
+        __nuckit_installed=$(__test_nuckit)
+    fi
+    
     debug "    Control Module:     ${__nuckit_installed}"
 
     __env_changed=false
@@ -295,7 +303,7 @@ else
 
 fi
 
-# Install ctrl_mod_lib into environment if changed or requested
+# Install ctrl module into environment if changed or requested
 if [[ $__ignore_ctrl_mod == false ]]; then
     if [[ $__env_changed = true ]]; then
         info "Environment installed/updated; (re)installing NucKit library..."
