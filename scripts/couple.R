@@ -179,17 +179,18 @@ if( grepl(".fa", args$refGenome) ){
   
   if( length(genome) == 0 ){
     
-    pandoc.strong("Installed genomes include")
-    pandoc.list(unique(BSgenome::installed.genomes()))
-    stop("Selected reference genome not in list.")
+    cat("\nInstalled genomes include")
+    print(paste(unique(BSgenome::installed.genomes()), collapse = "\n"))
+    stop("\nSelected reference genome not in list.")
     
   }else if( length(genome) > 1 ){
     
-    pandoc.strong("Installed genomes include")
-    pandoc.list(unique(BSgenome::installed.genomes()))
-    stop(
-      "Please be more specific about reference genome. Multiple matches to input."
-    )
+    cat("\nInstalled genomes include")
+    print(paste(unique(BSgenome::installed.genomes(), collapse = "\n")))
+    stop(paste(
+        "\nPlease be more specific about reference genome.", 
+        "Multiple matches to input."
+    ))
     
   }
   
@@ -401,13 +402,13 @@ if( is.null(args$keys) ){
 
 
 # Print out basic alignment info.
-pander(sprintf(
+cat(sprintf(
   "Anchor Alignments: %1$s from %2$s reads", 
   nrow(anchor_hits),
   length(unique(anchor_hits$qName))
 ))
 
-pander(sprintf(
+cat(sprintf(
   "\nAdrift Alignments: %1$s from %2$s reads\n\n", 
   nrow(adrift_hits),
   length(unique(adrift_hits$qName))
@@ -1136,15 +1137,14 @@ if( !is.null(args$multihits) ){
   
   writeOutputFile(multihitData, file = args$multihits, format = "rds")
   
-  pandoc.table(
+  print(
     data.frame(
       "multihit_reads" = length(unique(names(unclustered_multihits))),
       "multihit_alignments" = length(unique(unclustered_multihits)),
       "multihit_clusters" = length(clustered_multihit_positions),
       "multihit_lengths" = sum(lengths(clustered_multihit_lengths))
-    ),
-    style = "simple",
-    split.tables = Inf)
+    )
+  )
   
   if( args$stat != FALSE ){
     
