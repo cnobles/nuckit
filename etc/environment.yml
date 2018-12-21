@@ -17,4 +17,5 @@ dependencies:
   - bioconductor-biostrings
   - bioconductor-shortread
   - bioconductor-bsgenome
+  - bioconductor-bsgenome.hsapiens.ucsc.hg38
   - semantic_version

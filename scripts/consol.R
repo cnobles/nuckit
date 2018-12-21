@@ -1,5 +1,5 @@
 #!/usr/bin/env Rscript
-options(stringsAsFactors = FALSE, scipen = 99)
+options(stringsAsFactors = FALSE, scipen = 99, width = 999)
 
 code_dir <- dirname(sub(
   pattern = "--file=", 

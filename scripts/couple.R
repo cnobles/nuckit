@@ -7,7 +7,7 @@
 #' Names with ".": arguments / options for functions
 
 #!/usr/bin/env Rscript
-options(stringsAsFactors = FALSE, scipen = 99)
+options(stringsAsFactors = FALSE, scipen = 99, width = 999)
 
 code_dir <- dirname(sub(
   pattern = "--file=", 
@@ -179,13 +179,13 @@ if( grepl(".fa", args$refGenome) ){
   
   if( length(genome) == 0 ){
     
-    cat("\nInstalled genomes include")
+    cat("\nInstalled genomes include:\n")
     print(paste(unique(BSgenome::installed.genomes()), collapse = "\n"))
-    stop("\nSelected reference genome not in list.")
+    stop("\nSelected reference '", args$refGenome, "'genome not in list.")
     
   }else if( length(genome) > 1 ){
     
-    cat("\nInstalled genomes include")
+    cat("\nInstalled genomes include:\n")
     print(paste(unique(BSgenome::installed.genomes(), collapse = "\n")))
     stop(paste(
         "\nPlease be more specific about reference genome.", 
