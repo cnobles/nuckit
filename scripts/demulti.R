@@ -66,6 +66,16 @@ parser$add_argument(
 )
 
 parser$add_argument(
+  "--bc1Man", nargs = 1, type = "character", default = "barcode1", 
+  help = desc$bc1Man
+)
+
+parser$add_argument(
+  "--bc2Man", nargs = 1, type = "character", default = "barcode2", 
+  help = desc$bc2Man
+)
+
+parser$add_argument(
   "--bc1Len", nargs = 1, type = "integer", default = 8, 
   help = desc$bc1Len
 )
@@ -158,17 +168,21 @@ if( !is.null(args$maxMis) ){
 
 input_table <- data.frame(
   "Variables" = paste0(names(args), " :"), 
-  "Values" = sapply( 1:length(args), function(i){
-    paste(args[[i]], collapse = ", ")
-  } )
+  "Values" = sapply( 
+    seq_along(args), 
+    function(i){
+      paste(args[[i]], collapse = ", ")
+    }
+  )
 )
 
 input_table <- input_table[
   match(
     c("manifest :", "idx1 :", "idx2 :", "read1 :", "read2 :", 
-      "outfolder :", "stat :", "bc1 :", "bc2 :", "bc1Len :", "bc2Len :", 
-      "bc1Mis :", "bc2Mis :", "cores :", "compress :", "poolreps :", 
-      "singleBarcode :",  "readNamePattern :"),
+      "outfolder :", "stat :", "bc1 :", "bc2 :", "bc1Man :", "bc2Man :", 
+      "bc1Len :", "bc2Len :", "bc1Mis :", "bc2Mis :", "cores :", "compress :", 
+      "poolreps :", "singleBarcode :",  "readNamePattern :"
+    ),
     input_table$Variables
   ),
 ]
@@ -277,11 +291,12 @@ writeDemultiplexedSequences <- function(read.file.path, type, multiplexed.data,
   return(list(read.file.path, type, out.folder))
   
 }
-# Load manifest / sample mapping file ----
-fileExt <- unlist(strsplit(args$manifest, "\\."))
-fileExt <- fileExt[length(fileExt)]
 
-if( fileExt %in% c("yaml", "yml") ){
+# Load manifest / sample mapping file ----
+file_ext <- unlist(strsplit(args$manifest, "\\."))
+file_ext <- file_ext[length(file_ext)]
+
+if( file_ext %in% c("yaml", "yml") ){
   
   if( !"yaml" %in% row.names(installed.packages()) ){
     stop("Package:yaml not loaded or installed.")
@@ -293,33 +308,35 @@ if( fileExt %in% c("yaml", "yml") ){
     
     samples_df <- data.frame(
       "sampleName" = names(manifest$samples),
-      "bc1" = sapply( manifest$samples, function(x) x$bc1 ),
+      "bc1" = sapply( manifest$samples, function(x) x[args$bc1Man] ),
       row.names = NULL
     )
-  
+    
   }else{
     
     samples_df <- data.frame(
       "sampleName" = names(manifest$samples),
-      "bc1" = sapply( manifest$samples, function(x) x$bc1 ),
-      "bc2" = sapply( manifest$samples, function(x) x$bc2 ),
+      "bc1" = sapply( manifest$samples, function(x) x[args$bc1Man] ),
+      "bc2" = sapply( manifest$samples, function(x) x[args$bc2Man] ),
       row.names = NULL
     )
-  
+    
   }
 
 }else{
   
-  if( fileExt == "csv" ){
+  if( file_ext == "csv" ){
     manifest <- read.csv(args$manifest)
-  }else if( fileExt == "tsv" ){
+  }else if( file_ext == "tsv" ){
     manifest <- read.delim(args$manifest)
   }
   
   if( args$singleBarcode ){
-    samples_df <- manifest[, c("sampleName", "bc1")]
+    samples_df <- manifest[, c("sampleName", args$bc1Man)]
+    names(samples_df) <- c("sampleName", "bc1")
   }else{
-    samples_df <- manifest[, c("sampleName", "bc1", "bc2")]
+    samples_df <- manifest[, c("sampleName", args$bc1Man, args$bc2Man)]
+    names(samples_df) <- c("sampleName", "bc1", "bc2")
   }
   
 }
@@ -327,17 +344,17 @@ if( fileExt %in% c("yaml", "yml") ){
 
 if( !args$singleBarcode ){
   
-  uniqueSamples <- nrow(samples_df[,c("bc1", "bc2")]) == 
+  unique_samples <- nrow(samples_df[,c("bc1", "bc2")]) == 
     nrow(unique(samples_df[,c("bc1", "bc2")]))
   
-  if( !uniqueSamples ) stop("Ambiguous barcoding of samples. Please correct.")
+  if( !unique_samples ) stop("Ambiguous barcoding of samples. Please correct.")
 
 }else{
 
-  uniqueSamples <- length(samples_df[,c("bc1")]) == 
+  unique_samples <- length(samples_df[,c("bc1")]) == 
     length(unique(samples_df[,"bc1"]))
   
-  if( !uniqueSamples ) stop("Ambiguous barcoding of samples. Please correct.")
+  if( !unique_samples ) stop("Ambiguous barcoding of samples. Please correct.")
 
 }
 
