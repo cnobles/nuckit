@@ -29,7 +29,7 @@ quiet <- any(grepl("-q", cmd_args))
 
 
 # Check installed packages for dependencies ----
-r_packs <- c("yaml", "argparse", "stringr")
+r_packs <- c("yaml", "argparse", "stringr", "data.table")
 
 bioc_packs <- c(
   "ShortRead", "Biostrings", "GenomicRanges", "IRanges",
