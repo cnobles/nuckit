@@ -340,13 +340,13 @@ if [[ $__install_ctrl_mod == true ]]; then
     fi
 fi
 
-# Test NucKit tools for functionality
-info "Testing NucKit tools..."
-test_nuckit_tools
-
 # Always update the env_vars.sh in the nuckit environment
 debug "Updating \$NUCKIT_DIR variable to point to ${__nuckit_dir}"
 install_env_vars
+
+# Test NucKit tools for functionality
+info "Testing NucKit tools..."
+test_nuckit_tools
 
 # Check if on pre-existing path
 if [[ $__old_path != *"${__conda_path}/bin"* ]]; then

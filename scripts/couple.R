@@ -403,13 +403,13 @@ if( is.null(args$keys) ){
 
 # Print out basic alignment info.
 cat(sprintf(
-  "Anchor Alignments: %1$s from %2$s reads", 
+  "Anchor Alignments: %1$s from %2$s sequences", 
   nrow(anchor_hits),
   length(unique(anchor_hits$qName))
 ))
 
 cat(sprintf(
-  "\nAdrift Alignments: %1$s from %2$s reads\n\n", 
+  "\nAdrift Alignments: %1$s from %2$s sequences\n\n", 
   nrow(adrift_hits),
   length(unique(adrift_hits$qName))
 ))
