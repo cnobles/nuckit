@@ -281,7 +281,7 @@ writeDemultiplexedSequences <- function(read.file.path, type, multiplexed.data,
       
       ShortRead::writeFastq(reads[[i]], file = filePath, compress = compress)
       
-      message(
+      cat(
         paste0("\nWrote ", length(reads[[i]]), " reads to:\n", filePath, "."))
       
     },
@@ -360,7 +360,7 @@ if( !args$singleBarcode ){
 
 # Read in barcode sequences ----
 bc1_reads <- ShortRead::readFastq(demulti$path[demulti$bc1])
-message(paste("Reads to demultiplex : ", length(bc1_reads)))
+cat(paste("Reads to demultiplex : ", length(bc1_reads)))
 
 if( args$cores > 1 ){
   
@@ -497,7 +497,7 @@ cat("\nRead counts for each sample.")
 print(samples_df, split.tables = Inf)
 
 # Ambiguous reads
-message(paste0("\nAmbiguous reads: ", length(ambiguous_indices)))
+cat(paste0("\nAmbiguous reads: ", length(ambiguous_indices)))
 
 # Unassigned reads
 all_indices <- seq_along(bc1_reads)
@@ -609,5 +609,5 @@ if( args$cores > 1 ){
 
 }
 
-message("\nDemultiplexing complete.")
+cat("\nDemultiplexing complete.")
 q()

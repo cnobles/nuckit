@@ -245,9 +245,9 @@ function test_nuckit_tools () {
     if [[ $__with_conda == true ]]; then activate_nuckit; fi
 
     if [[ $(__test_nuckit) == true ]]; then
-        debug_capture bash ${__nuckit_dir}/tests/ctrl_test.sh 2>&1
+        debug_capture bash ${__nuckit_dir}/etc/ctrl_test.sh 2>&1
     else
-        debug_capture bash ${__nuckit_dir}/tests/test.sh 2>&1
+        debug_capture bash ${__nuckit_dir}/etc/test.sh 2>&1
     fi
 
     if [[ $__with_conda == true ]]; then deactivate_nuckit; fi
@@ -352,7 +352,7 @@ test_nuckit_tools
 if [[ $__old_path != *"${__conda_path}/bin"* ]]; then
     warning "** Conda was not detected on your PATH. **"
     warning "This is normal if you haven't installed Conda before."
-    warning "To add it to your path, run "
+    warning "To add it to your path, run:"
     warning "   'echo \"export PATH=\$PATH:${__conda_path}/bin\" >> ~/.bashrc'"
     warning "and close and re-open your terminal session to apply."
     warning "When finished, run 'source activate ${__nuckit_env}' to begin."
