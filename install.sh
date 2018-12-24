@@ -245,7 +245,7 @@ function test_nuckit_tools () {
     if [[ $__with_conda == true ]]; then activate_nuckit; fi
 
     if [[ $(__test_nuckit) == true ]]; then
-        debug_capture bash ${__nuckit_dir}/etc/ctrl_test.sh 2>&1
+        debug_capture bash ${__nuckit_dir}/etc/test_ctrl.sh 2>&1
     else
         debug_capture bash ${__nuckit_dir}/etc/test.sh 2>&1
     fi
