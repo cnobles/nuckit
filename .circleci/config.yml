@@ -11,16 +11,12 @@ jobs:
     steps:
       - checkout
 
-      # Download and cache dependencies
-      - restore_cache:
-          keys:
-          - v1-dependencies-{{ checksum "etc/environment.yml" }}
-
       - run:
           name: install
           command: |
-            bash install.sh -v
-      - save_cache:
-          paths:
-            - ~/miniconda3
-          key: v1-dependencies-{{ checksum "etc/environment.yml" }}
+            bash install.sh
+
+      - run:
+          name: run tests
+          command: |
+            bash etc/tests_ctrl.sh nuckit

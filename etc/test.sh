@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
 set -e
 
+# Activate nuckit environment if option is given
+__nuckit_env=${1:-null}
+
+if [[ $__nuckit_env != null ]]; then
+    source activate $__nuckit_env
+fi
+
 # Empty test directory of test output files
 rm -rf etc/test_output
 
@@ -168,6 +175,10 @@ cat etc/test_output/testSeq-1.couple.stat.csv
 ### Clean up ###
 
 rm -r etc/test_output
+
+if [[ $__nuckit_env != null ]]; then
+    source deactivate 
+fi
 
 echo "Passed all tests."
 
