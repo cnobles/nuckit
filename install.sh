@@ -11,6 +11,7 @@ read -r -d '' __usage <<-'EOF'
   -i --ignore_ctrl_mod    Ignore installation of control module.
   -r --cran               Install missing dependencies from CRAN.
   -m --cran_mirror  [arg] Install missing dependencies from supplied mirror URL.
+  -s --skip_tests         Skip testing NucKit after install.
   -v --verbose            Show subcommand output
   -d --debug              Run in debug mode.
   -h --help               Display this message and exit.
@@ -71,8 +72,11 @@ __with_conda=true
 __install_ctrl_mod=true
 __install_cran=false
 __install_mirror=false
+__skip_tests=false
 __req_r_version="3.4.1"
 __old_path=$PATH
+
+PATH=$PATH:${__conda_path}/bin
 
 # update env and/or tools
 if [[ "${arg_u}" = "all" || "${arg_u}" = "env" ]]; then
@@ -90,6 +94,11 @@ fi
 # ignore installation of control module
 if [[ "${arg_i:?}" == "1" ]]; then
     __install_ctrl_mod=false
+fi
+
+# skip tests after installation
+if [[ "${arg_s:?}" == "1" ]]; then
+    __skip_tests=true
 fi
 
 # install mode for missing dependencies from cran or a cran mirror
@@ -143,7 +152,7 @@ function __test_env () {
     fi
 }
 
-function __test_nuckit () {
+function __test_nuckit_ctrl () {
     if [[ $(__test_env) = true ]]; then
           activate_nuckit
           command -v nuc &> /dev/null && echo true || echo false
@@ -203,13 +212,13 @@ function install_env_vars () {
 function install_ctrl_mod_lib () {
     if [[ $__with_conda == true ]]; then
         activate_nuckit
-        debug_capture pip install --upgrade ${__nuckit_dir}/nuckit_ctrl 2>&1
+        debug_capture pip install --upgrade ${__nuckit_dir}/etc/nuckit_ctrl 2>&1
         deactivate_nuckit
     else
-        debug_capture pip install --upgrade ${__nuckit_dir}/nuckit_ctrl 2>&1
+        debug_capture pip install --upgrade ${__nuckit_dir}/etc/nuckit_ctrl 2>&1
     fi
 
-    if [[ $(__test_nuckit) != true ]]; then
+    if [[ $(__test_nuckit_ctrl) != true ]]; then
         installation_error "Control module installation"
     fi
 }
@@ -244,7 +253,7 @@ function install_nuckit_requirements () {
 function test_nuckit_tools () {
     if [[ $__with_conda == true ]]; then activate_nuckit; fi
 
-    if [[ $(__test_nuckit) == true ]]; then
+    if [[ $(__test_nuckit_ctrl) == true ]]; then
         debug_capture bash ${__nuckit_dir}/etc/test_ctrl.sh 2>&1
     else
         debug_capture bash ${__nuckit_dir}/etc/test.sh 2>&1
@@ -271,10 +280,10 @@ if [[ $__with_conda == true ]]; then
     
     if [[ $__env_exists == true ]]; then
         activate_nuckit
-        __nuckit_installed=$(__test_nuckit)
+        __nuckit_installed=$(__test_nuckit_ctrl)
         deactivate_nuckit
     else
-        __nuckit_installed=$(__test_nuckit)
+        __nuckit_installed=$(__test_nuckit_ctrl)
     fi
     
     debug "    Control Module:     ${__nuckit_installed}"
@@ -303,6 +312,10 @@ if [[ $__with_conda == true ]]; then
         install_environment
         __env_changed=true
     fi
+    
+    # Always update the env_vars.sh in the nuckit environment
+    debug "Updating \$NUCKIT_DIR variable to point to ${__nuckit_dir}"
+    install_env_vars
 
     # Check environment for required r-packages
     info "Checking R-package requirements..."
@@ -312,16 +325,20 @@ if [[ $__with_conda == true ]]; then
     
 else
 
+    # Always update the env_vars.sh in the nuckit environment
+    debug "Updating \$NUCKIT_DIR variable to point to ${__nuckit_dir}"
+    install_env_vars
+
     __r_installed=$(__test_r_version)
     debug "    R program:          ${__r_installed}"
-    __nuckit_installed=$(__test_nuckit)
+    __nuckit_installed=$(__test_nuckit_ctrl)
     debug "    Control Module:     ${__nuckit_installed}"
     __env_changed=false
 
     # Check / install R requirements
     info "Checking/Installing R-package requirments..."
     install_nuckit_requirements
-
+    
 fi
 
 # Install ctrl module into environment if changed or requested
@@ -340,13 +357,14 @@ if [[ $__install_ctrl_mod == true ]]; then
     fi
 fi
 
-# Always update the env_vars.sh in the nuckit environment
-debug "Updating \$NUCKIT_DIR variable to point to ${__nuckit_dir}"
-install_env_vars
 
-# Test NucKit tools for functionality
-info "Testing NucKit tools..."
-test_nuckit_tools
+if [[ $__skip_tests == false ]]; then
+    # Test NucKit tools for functionality
+    info "Testing NucKit tools..."
+    test_nuckit_tools
+else
+    info "Skipping NucKit tests."
+fi
 
 # Check if on pre-existing path
 if [[ $__old_path != *"${__conda_path}/bin"* ]]; then

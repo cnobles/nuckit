@@ -2,19 +2,23 @@ import os
 import sys
 import argparse
 import subprocess
+
 from pathlib import Path
+from nuckit_ctrl import __version__
 
 def main(argv = sys.argv):
 
     usage_str = "%(prog)s [-h/--help, -v/--version] <subcommand>"
     description_str = (
+        "NucKit - Nucleotide sequence analysis took kit!\n"
+        "\n"
         "subcommands:\n"
         "  demulti   \tDemultiplex Illumina sequence files given various barcoding schemes.\n"
         "  trim      \tTrim leading and/or over-reading sequences from sequence files.\n"
         "  filt      \tFilter sequences in one or more sequence files by various criteria.\n"
         "  consol    \tConsolidate reads to unique sequences and generate a key file.\n"
         "  couple    \tCouple independent BLAT alignments from paired-end sequences.\n"
-    )
+    ).format(version=__version__)
 
     parser = argparse.ArgumentParser(
         prog = "nuckit",
@@ -35,13 +39,13 @@ def main(argv = sys.argv):
 
     parser.add_argument(
         "--nuckit_dir", default = os.getenv("NUCKIT_DIR", os.getcwd()),
-        help = "Path to nuckit installation. (default: %(default)s)'"
+        help = "Path to NucKit installation. (default: %(default)s)'"
     )
 
-#    parser.add_argument(
-#        "-v", "--version", action = "version",
-#        version = "%(prog)s v{}".format(nuckit_ctrl.__version__)
-#    )
+    parser.add_argument(
+        "-v", "--version", action = "version",
+        version = "%(prog)s {}".format(__version__)
+    )
 
     args, remaining = parser.parse_known_args(argv)
 
