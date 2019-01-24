@@ -11,7 +11,7 @@ printHead <- function(object, title = NULL, caption = NULL, row.names = FALSE){
   
   stopifnot( !class(object) == "list" )
   
-  if( !is.null(title) ) cat(paste0("\n", title, ":"))
+  if( !is.null(title) ) cat(paste0("\n", title, ":\n"))
   
   if(!row.names){
     df <- as.data.frame( head(object), row.names = NULL )
