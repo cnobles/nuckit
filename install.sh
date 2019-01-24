@@ -274,9 +274,9 @@ debug "Components detected:"
 if [[ $__with_conda == true ]]; then
 
     __conda_installed=$(__test_conda)
-    debug "    Conda:               ${__conda_installed}"
+    debug "    Conda:              ${__conda_installed}"
     __env_exists=$(__test_env)
-    debug "    Environment:         ${__env_exists}"
+    debug "    Environment:        ${__env_exists}"
     
     if [[ $__env_exists == true ]]; then
         activate_nuckit
