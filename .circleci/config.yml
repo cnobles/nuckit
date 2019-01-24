@@ -19,4 +19,4 @@ jobs:
       - run:
           name: run tests
           command: |
-            bash etc/test.sh -e nuckit
+            bash etc/test.sh -e nuckit -v
