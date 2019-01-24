@@ -87,7 +87,7 @@ trimOverreading <- function(seqs, trim.sequence, percent.id,
   idx <- as.numeric(names(alignments))
   
   if( any(table(idx) > 1) ){
-    stop("Issues with overread trimming, please adjust input parameters.")
+    stop("\n  Issues with overread trimming, please adjust input parameters.\n")
   }
   
   # Trim sequences

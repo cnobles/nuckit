@@ -27,6 +27,6 @@ printHead <- function(object, title = NULL, caption = NULL, row.names = FALSE){
   )]
   
   print(df, row.names = FALSE)
-  cat(paste0("Table Caption: ", caption))
+  cat(paste0("Table Caption: ", caption, "\n"))
     
 }

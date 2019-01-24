@@ -164,7 +164,10 @@ seqFileType <- function(file){
   seq_type <- stringr::str_extract(as.character(file), "fa[\\w]*")
   
   if( any(!seq_type %in% c("fa", "fasta", "fastq")) ){
-    stop("Unrecognized seq file type, please choose '*.fasta' or '*.fastq'.")
+    stop(
+      "\n  Unrecognized seq file type, please ",
+      "choose '*.fasta' or '*.fastq'.\n"
+    )
   }
   
   return(

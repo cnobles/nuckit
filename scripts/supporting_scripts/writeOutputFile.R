@@ -101,7 +101,7 @@ writeOutputFile <- function(object, file, format = "any"){
     
   }else{
     
-    stop("Unsupported file type. Supported: csv, tsv, rds, and RData.")
+    stop("\n  Unsupported file type. Supported: csv, tsv, rds, and RData.\n")
     
   }
 }
@@ -115,38 +115,68 @@ writeOutputFile <- function(object, file, format = "any"){
 #' @author Christopher Nobles, Ph.D.
 
 writeNullOutput <- function(args){
-  if(!exists("uniq_sites")){
+  
+  if( !exists("uniq_sites") ){
+    
     metaCols <- read.table(
       text = "", 
       col.names = c("lociPairKey", "readPairKey", "sampleName", "ID"),
-      colClasses = c("character", "character", "character", "character"))
+      colClasses = c("character", "character", "character", "character")
+    )
+    
     g <- GRanges()
     mcols(g) <- metaCols
-    writeOutputFile(object = g, file = args$uniqOutput)}
-  if(!exists("cond_sites") & !is.null(args$condSites)){
-    writeOutputFile(object = GRanges(), file = args$condSites)}
-  if(!exists("chimeraData") & !is.null(args$chimeras)){
+    
+    writeOutputFile(object = g, file = args$uniqOutput)
+    
+  }
+  
+  if( !exists("cond_sites") & !is.null(args$condSites) ){
+    writeOutputFile(object = GRanges(), file = args$condSites)
+  }
+  
+  if( !exists("chimeraData") & !is.null(args$chimeras) ){
+    
     writeOutputFile(
       object = list("read_info" = data.frame(), "alignments" = GRangesList()), 
       file = args$chimeras,
-      format = "rds")}
-  if(!exists("multihitData") & !is.null(args$multihits)){
-    writeOutputFile(
-      object = list("unclustered_multihits" = GRanges(), 
-                    "clustered_multihit_positions" = GRangesList(), 
-                    "clustered_multihit_lengths" = list()),
-      file = args$multihits,
-      format = "rds")
+      format = "rds"
+    )
+    
   }
-  if(args$stat != FALSE){
-    if(exists("stat")){
+  
+  if( !exists("multihitData") & !is.null(args$multihits) ){
+    
+    writeOutputFile(
+      object = list(
+        "unclustered_multihits" = GRanges(), 
+        "clustered_multihit_positions" = GRangesList(), 
+        "clustered_multihit_lengths" = list()
+      ),
+      file = args$multihits,
+      format = "rds"
+    )
+    
+  }
+  
+  if( args$stat != FALSE ){
+    
+    if( exists("stat") ){
+      
       write.table(
         stat, file = args$stat,
-        sep = ",", row.names = FALSE, col.names = FALSE, quote = FALSE)
+        sep = ",", row.names = FALSE, col.names = FALSE, quote = FALSE
+      )
+      
     }else{
+      
       write.table(
         data.frame(), file = args$stat,
-        sep = ",", row.names = FALSE, col.names = FALSE, quote = FALSE)
+        sep = ",", row.names = FALSE, col.names = FALSE, quote = FALSE
+      )
+      
     }
+    
   }
+  
 }

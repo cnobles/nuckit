@@ -91,9 +91,9 @@ trimLeading <- function(seqs, trim.sequence, phasing = 0L, max.mismatch = 1L,
   }else{
     
     stop(
-      "\nThe variable max.mismatch needs to be either a single integer or 
+      "\n  The variable max.mismatch needs to be either a single integer or 
       integer vector of length equal to fixed fragments within the 
-      trim.sequence."
+      trim.sequence.\n"
     )
     
   }
@@ -151,8 +151,8 @@ trimLeading <- function(seqs, trim.sequence, phasing = 0L, max.mismatch = 1L,
       
         if( any(S4Vectors::lengths(aln) > 1) ){
           stop(
-            "\nAlignment too permissive. Ambiguous mapping of sequences.
-             Please adjust max.mismatch criteria."
+            "\n  Alignment too permissive. Ambiguous mapping of sequences.
+             Please adjust max.mismatch criteria.\n"
           )
         }
         

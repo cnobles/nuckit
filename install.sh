@@ -76,8 +76,6 @@ __skip_tests=false
 __req_r_version="3.4.1"
 __old_path=$PATH
 
-PATH=$PATH:${__conda_path}/bin
-
 # update env and/or tools
 if [[ "${arg_u}" = "all" || "${arg_u}" = "env" ]]; then
     __update_tools=true
@@ -179,7 +177,7 @@ function deactivate_nuckit () {
 function install_conda () {
     local tmpdir=$(mktemp -d)
     debug "Downloading miniconda..."
-    debug_capture wget -nv ${__conda_url} -O ${tmpdir}/miniconda.sh 2>&1
+    debug_capture wget -q ${__conda_url} -O ${tmpdir}/miniconda.sh 2>&1
     debug "Installing miniconda..."
     debug_capture bash ${tmpdir}/miniconda.sh -b -p ${__conda_path} 2>&1
     if [[ $(__test_conda) != true ]]; then
@@ -251,15 +249,17 @@ function install_nuckit_requirements () {
 }
 
 function test_nuckit_tools () {
-    if [[ $__with_conda == true ]]; then activate_nuckit; fi
+    test_str="-p ${__nuckit_dir}"
 
-    if [[ $(__test_nuckit_ctrl) == true ]]; then
-        debug_capture bash ${__nuckit_dir}/etc/test_ctrl.sh 2>&1
-    else
-        debug_capture bash ${__nuckit_dir}/etc/test.sh 2>&1
+    if [[ $__with_conda == true ]]; then 
+        test_str="${test_str} -e ${__nuckit_env}"
     fi
 
-    if [[ $__with_conda == true ]]; then deactivate_nuckit; fi
+    if [[ $(__test_nuckit_ctrl) == false ]]; then
+        test_str="${test_str} -n"
+    fi
+
+    debug_capture bash ${__nuckit_dir}/etc/test.sh "${test_str}" 2>&1
 }
 
 

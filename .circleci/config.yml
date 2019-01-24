@@ -14,9 +14,9 @@ jobs:
       - run:
           name: install
           command: |
-            bash install.sh
+            bash install.sh -v
 
       - run:
           name: run tests
           command: |
-            bash etc/tests_ctrl.sh nuckit
+            bash etc/test.sh -e nuckit

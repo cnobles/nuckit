@@ -21,7 +21,7 @@ readKeyFile <- function(key.file, format){
       if(grepl("Input is either empty", file[1])){
         file <- read.table(text = "", col.names = cols, colClasses = cols.class)
       }else{
-        stop("Error in loading key files. Check input files.")
+        stop("\n  Error in loading key files. Check input files.\n")
       }
       
     }
@@ -39,7 +39,7 @@ readKeyFile <- function(key.file, format){
       if(grepl("Input is either empty", file[1])){
         file <- read.table(text = "", col.names = cols, colClasses = cols.class)
       }else{
-        stop("Error in loading key files. Check input files.")
+        stop("\n  Error in loading key files. Check input files.\n")
       }
       
     }
@@ -56,7 +56,7 @@ readKeyFile <- function(key.file, format){
     env <- new.env()
     load(key.file, envir = env)
     if( length(env) > 1 ){
-      stop("More than one object present in key.file (RData).")
+      stop("\n  More than one object present in key.file (RData).\n")
     }
     
     return( env[[ls(env)]] )
@@ -64,8 +64,8 @@ readKeyFile <- function(key.file, format){
   }else{
     
     stop(
-      "Key file not in a supported file type,",
-      " convert to csv, tsv, rds, or RData."
+      "\nKey file not in a supported file type,",
+      " convert to csv, tsv, rds, or RData.\n"
     )
     
   }

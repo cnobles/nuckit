@@ -31,7 +31,10 @@ readPSL <- function(psl.file, to.null = NULL) {
         p <- read.table(text = "", col.names = cols, colClasses = cols_class)
         return(data.table::as.data.table(p))
       }else{
-        stop("Error in loading psl files. Check output from alignment (blat).")
+        stop(
+          "\n  Error in loading psl files. Check ",
+          "output from alignment (blat).\n"
+        )
       }
       
     }else{
