@@ -55,6 +55,18 @@ function testing_error () {
     exit 1
 }
 
+function activate_env () {
+    set +o nounset
+    source activate $__nuckit_env
+    set -o nounset
+}
+
+function deactivate_env () {
+    set +o nounset
+    source deactivate
+    set -o nounset
+}
+
 
 # ------------------------------------------------------------------------------
 
@@ -121,7 +133,7 @@ rm -rf etc/test_output
 
 # Activate test environment if supplied
 if [[ $__nuckit_env != null ]]; then
-    source activate $__nuckit_env
+    activate_env
 fi
 
 # Test for required packages
@@ -363,7 +375,7 @@ info "Cleaning up..."
 rm -r etc/test_output
 
 if [[ $__nuckit_env != null ]]; then
-    source deactivate 
+    deactivate_env
 fi
 
 info "Passed all tests. Complete."
