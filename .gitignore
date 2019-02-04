@@ -141,4 +141,4 @@ venv.bak/
 .mypy_cache/
 
 # test output files
-tests/test_output
+etc/test_output

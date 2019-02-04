@@ -1,5 +1,5 @@
 # This file contains descriptions for the dualDemultiplexR program and options available for configuring the analysis.
-program_short_description : "R-based demultiplexing for dual-barcoded Illumina sequencing runs."
+program_short_description : "R-based demultiplexing for dual-barcoded Illumina sequencing files."
 
 # The following are descriptions of options.
 manifest : "Manifest file (*.yaml, *.yml, *.csv, *.tsv)."

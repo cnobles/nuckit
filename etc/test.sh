@@ -57,13 +57,13 @@ function testing_error () {
 
 function activate_env () {
     set +o nounset
-    source activate $__nuckit_env
+    conda activate $__nuckit_env
     set -o nounset
 }
 
 function deactivate_env () {
     set +o nounset
-    source deactivate
+    conda deactivate
     set -o nounset
 }
 
@@ -79,7 +79,7 @@ __req_r_version="3.4.1"
 
 __old_path=$PATH
 
-PATH=$PATH:${__conda_path}/bin
+#PATH=$PATH:${__conda_path}/bin
 
 cd $__nuckit_dir
 
@@ -133,6 +133,7 @@ rm -rf etc/test_output
 
 # Activate test environment if supplied
 if [[ $__nuckit_env != null ]]; then
+    source ${HOME}/miniconda3/etc/profile.d/conda.sh
     activate_env
 fi
 
@@ -369,6 +370,9 @@ else
     info "    test 2/2: passed (stats)"
 fi
 
+# Check all outputs for identify
+info "MD5 checksum testing output ..."
+debug_capture Rscript etc/check_file_digests.R etc/test.digests.csv -v 2>&1
 
 ### Clean up ###
 info "Cleaning up..."
