@@ -759,7 +759,7 @@ if( args$cores > 1 ){
         )
       )
       
-      reads <- reads[multiplexed.data$index]
+      reads <- reads[match(multiplexed.data$index, as.character(reads@id))]
       reads <- split(reads, multiplexed.data$sampleName)
     
       demultiplex <- parallel::clusterMap(
@@ -768,7 +768,7 @@ if( args$cores > 1 ){
         reads = reads,
         samplename = names(reads),
         MoreArgs = list(
-          type = read_list,
+          type = read.type,
           outfolder = args$outfolder,
           compress = args$compress
         )
