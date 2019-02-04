@@ -101,6 +101,11 @@ parser$add_argument(
 )
 
 parser$add_argument(
+  "--maxN", nargs = 1, type = "integer", default = 1,
+  help = desc$maxN
+)
+
+parser$add_argument(
   "--stat", nargs = 1, type = "character", default = FALSE, 
   help = desc$stat
 )
@@ -221,29 +226,86 @@ if( !all(present_packs) ){
 }
 
 # Operating functions ----
-parseIndexReads <- function(barcode, index.file.path, barcode.length, 
-                            max.mismatch, read.name.pattern){
+parseIndexReads <- function(barcode.seqs, index.file.path, barcode.length,
+                                  max.mismatch, max.N.count = 1L, 
+                                  read.name.pattern){
   
   # Load index file sequences and sequence names
   index <- ShortRead::readFastq(index.file.path)
   index <- ShortRead::narrow(index, start = 1, end = barcode.length)
-  index@id <- Biostrings::BStringSet(
-    stringr::str_extract(
-      as.character(ShortRead::id(index)), 
-      read.name.pattern)
-  )
+  unique_index_seqs <- unique(ShortRead::sread(index))
   
   # Trim barcode if necessary
-  barcode <- as.character(
-    Biostrings::DNAStringSet(barcode, start = 1, end = barcode.length)
+  barcode_seqs <- as.character(
+    Biostrings::DNAStringSet(
+      unique(barcode.seqs), 
+      start = 1, 
+      end = barcode.length
+    )
   )
   
   # Identify read names with sequences above or equal to the minscore
-  vmp <- Biostrings::vmatchPattern(
-    barcode, ShortRead::sread(index), max.mismatch = max.mismatch, fixed = FALSE
+  bc_to_unique_idxs <- lapply(
+    barcode_seqs, 
+    function(x){
+      
+      vmp <- Biostrings::vmatchPattern(
+        pattern = x,
+        subject = unique_index_seqs, 
+        max.mismatch = max.mismatch, 
+        fixed = FALSE
+      )
+      
+      which(lengths(vmp) == 1)
+      
+    }
   )
   
-  return( which(lengths(vmp) == 1) )
+  # Lookup frame to match barcode sequences to index sequences
+  # Sequence variability accounted for and ambiguous, degenerate, and unassigned
+  # sequences identified
+  degenerate_idxs <- which(
+    stringr::str_count(unique_index_seqs, "N") > max.N.count
+  )
+  
+  ambiguous_idxs <- as.numeric(names(table(unlist(bc_to_unique_idxs)))[
+    table(unlist(bc_to_unique_idxs)) > 1
+  ])
+  
+  ambiguous_idxs <- ambiguous_idxs[!ambiguous_idxs %in% degenerate_idxs]
+  
+  unassigned_idxs <- seq_along(unique_index_seqs)[
+    !seq_along(unique_index_seqs) %in% unlist(bc_to_unique_idxs)
+  ]
+  
+  unassigned_idxs <- unassigned_idxs[!unassigned_idxs %in% degenerate_idxs]
+  
+  bc_to_unique_idxs <- lapply(bc_to_unique_idxs, function(x){
+    x[!x %in% c(ambiguous_idxs, unassigned_idxs, degenerate_idxs)]
+  })
+  
+  lookup_frame <- data.frame(
+    bc_seqs = factor(S4Vectors::Rle(
+      values = c(unique(barcode.seqs), "ambiguous", "degenerate", "unassigned"),
+      lengths = c(
+        lengths(bc_to_unique_idxs), length(ambiguous_idxs), 
+        length(degenerate_idxs), length(unassigned_idxs)
+      )
+    ), 
+    levels = c(unique(barcode.seqs), "ambiguous", "degenerate", "unassigned")
+    ),
+    index_seqs = unique_index_seqs[
+      c(unlist(bc_to_unique_idxs), ambiguous_idxs, 
+        degenerate_idxs, unassigned_idxs)
+      ]
+  )
+  
+  return(split(
+    seq_along(index), 
+    lookup_frame$bc_seqs[
+      match(as.character(ShortRead::sread(index)), lookup_frame$index_seqs)
+      ]
+  ))
   
 }
 
@@ -360,6 +422,7 @@ if( !args$singleBarcode ){
 
 # Read in barcode sequences ----
 bc1_reads <- ShortRead::readFastq(demulti$path[demulti$bc1])
+all_indices <- seq_along(bc1_reads)
 cat(paste("\nReads to demultiplex : ", length(bc1_reads), "\n"))
 
 if( args$cores > 1 ){
@@ -373,6 +436,7 @@ if( args$cores > 1 ){
     index.file.path = demulti$path[demulti$bc1],
     barcode.length = args$bc1Len,
     max.mismatch = args$bc1Mis,
+    max.N.count = args$maxN,
     read.name.pattern = args$readNamePattern
   )
   
@@ -397,6 +461,7 @@ if( args$cores > 1 ){
       index.file.path = demulti$path[demulti$bc2],
       barcode.length = args$bc2Len,
       max.mismatch = args$bc2Mis,
+      max.N.count = args$maxN,
       read.name.pattern = args$readNamePattern
     )
     
@@ -406,22 +471,20 @@ if( args$cores > 1 ){
   
 }else{
   
-  BC1_parsed <-  lapply(
-    unique(samples_df$bc1), 
-    parseIndexReads,
+  BC1_parsed <-  parseIndexReads(
+    barcode.seqs = samples_df$bc1, 
     index.file.path = demulti$path[demulti$bc1],
     barcode.length = args$bc1Len,
     max.mismatch = args$bc1Mis,
+    max.N.count = args$maxN,
     read.name.pattern = args$readNamePattern
   )
 
-  names(BC1_parsed) <- unique(samples_df$bc1)
-  
   cat("\nbc1 breakdown:\n")
   print(
     data.frame(
       "bc1" = names(BC1_parsed),
-      "Read Counts" = sapply( BC1_parsed, length )
+      "Read Counts" = lengths(BC1_parsed)
     ),
     right = TRUE, 
     row.names = FALSE
@@ -429,12 +492,12 @@ if( args$cores > 1 ){
   
   if( !args$singleBarcode ){
     
-    BC2_parsed <- lapply(
-      unique(samples_df$bc2), 
-      parseIndexReads,
+    BC2_parsed <- parseIndexReads(
+      barcode.seqs = samples_df$bc2, 
       index.file.path = demulti$path[demulti$bc2],
       barcode.length = args$bc2Len,
       max.mismatch = args$bc2Mis,
+      max.N.count = args$maxN,
       read.name.pattern = args$readNamePattern
     )
     
@@ -444,12 +507,11 @@ if( args$cores > 1 ){
 
 if( !args$singleBarcode ){
 
-  names(BC2_parsed) <- unique(samples_df$bc2)
   cat("\nbc2 breakdown:\n")
   print(
     data.frame(
       "bc2" = names(BC2_parsed),
-      "Read Counts" = sapply(BC2_parsed, length)
+      "Read Counts" = lengths(BC2_parsed)
     ),
     right = TRUE,
     row.names = FALSE
@@ -474,55 +536,78 @@ if( !args$singleBarcode ){
   
 }else{
   
-  demultiplexed_indices <- BC1_parsed
+  demultiplexed_indices <- BC1_parsed[samples_df$bc1]
   
 }
 
 # As there is some flexibility in the barcode matching, some reads may be 
-# be assigned to multiple samples. These reads are ambiguous and will be 
-# removed.
-ambiguous_indices <- unique(
-  unlist(demultiplexed_indices)[duplicated(unlist(demultiplexed_indices))]
-)
+# be assigned to multiple samples (ambiguous). Additionally, uncalled bases can
+# lead to degenerate sequences (a cause of ambiguous matching), or many 
+# sequences will be unassigned.
+if( !args$singleBarcode ){
+  
+  degenerate_indices <- unique(c(BC1_parsed$degenerate, BC2_parsed$degenerate))
 
-demultiplexed_indices <- lapply(demultiplexed_indices, function(x, reads){
-    x[!x %in% reads]
-  },
-  reads = ambiguous_indices
-)
+  ambiguous_indices <- unique(c(BC1_parsed$ambiguous, BC2_parsed$ambiguous))
+  
+  ambiguous_indices <- ambiguous_indices[
+    !ambiguous_indices %in% degenerate_indices
+  ]
+  
+  unassigned_indices <- unique(c(BC1_parsed$unassigned, BC2_parsed$unassigned))
+
+  unassigned_indices <- unassigned_indices[
+    !unassigned_indices %in% c(degenerate_indices, ambiguous_indices)
+  ]
+  
+  demultiplexed_indices <- lapply(demultiplexed_indices, function(x){
+    x[!x %in% c(unassigned_indices, ambiguous_indices, degenerate_indices)]
+  })
+  
+  unassigned_indices <- c(unassigned_indices, all_indices[
+    !all_indices %in% c(
+      unlist(demultiplexed_indices), degenerate_indices, 
+      ambiguous_indices, unassigned_indices
+    )
+  ])
+  
+}else{
+  
+  degenerate_indices <- BC1_parsed$degenerate
+  ambiguous_indices <- BC1_parsed$ambiguous
+  unassigned_indices <- BC1_parsed$unassigned
+
+}
 
 # Reads by sample
-samples_df$read_counts <- sapply( demultiplexed_indices, length )
+samples_df$read_counts <- lengths(demultiplexed_indices)
 cat("\nRead counts for each sample.\n")
 print(samples_df, split.tables = Inf)
 
 # Ambiguous reads
 cat(paste0("\nAmbiguous reads: ", length(ambiguous_indices), "\n"))
 
+# Degenerate reads
+cat(paste0("Degenerate reads: ", length(degenerate_indices), "\n"))
+
 # Unassigned reads
-all_indices <- seq_along(bc1_reads)
-
-unassigned_indices <- all_indices[
-  !all_indices %in% unlist(demultiplexed_indices, use.names = FALSE)
-]
-
-unassigned_indices <- unassigned_indices[
-  !unassigned_indices %in% ambiguous_indices
-]
-
 cat(paste0("Unassigned reads: ", length(unassigned_indices), "\n"))
 
 if( args$stat != FALSE ){
   write.table(
     data.frame(
       sampleName = paste0(
-        c(samples_df$sampleName, "ambiguous_reads", "unassigned_reads"), 
+        c(
+          samples_df$sampleName, "ambiguous_reads", 
+          "degenerate_reads", "unassigned_reads"
+        ), 
         ".demulti"
       ),
       metric = "reads",
       count = c(
         samples_df$read_counts, 
         length(ambiguous_indices), 
+        length(degenerate_indices),
         length(unassigned_indices)
       )
     ),
@@ -535,7 +620,7 @@ if( args$stat != FALSE ){
 multiplexed_data <- data.frame(
   "sampleName" = S4Vectors::Rle(
     values = samples_df$sampleName, 
-    length = sapply(demultiplexed_indices, length)
+    length = lengths(demultiplexed_indices)
   ),
   "index" = unlist(demultiplexed_indices),
   row.names = NULL
@@ -547,19 +632,28 @@ ambiguous_data <- data.frame(
   row.names = NULL
 )
 
-unassignedData <- data.frame(
+degenerate_data <- data.frame(
+  "sampleName" = rep("degenerate", length(degenerate_indices)),
+  "index" = degenerate_indices,
+  row.names = NULL
+)
+
+unassigned_data <- data.frame(
   "sampleName" = rep("unassigned", length(unassigned_indices)),
   "index" = unassigned_indices,
   row.names = NULL
 )
 
-multiplexed_data <- rbind(multiplexed_data, ambiguous_data, unassignedData)
-multiplexed_data$sampleName <- factor(
-  multiplexed_data$sampleName,
-  levels = c(samples_df$sampleName, "ambiguous", "unassigned")
+multiplexed_data <- rbind(
+  multiplexed_data, ambiguous_data, degenerate_data, unassigned_data
 )
 
-stopifnot(nrow(multiplexed_data) == length(all_indices))
+multiplexed_data$sampleName <- factor(
+  multiplexed_data$sampleName,
+  levels = c(samples_df$sampleName, "ambiguous", "degenerate", "unassigned")
+)
+
+stopifnot( all(multiplexed_data$index %in% all_indices) )
 
 if( args$poolreps ){
   multiplexed_data$sampleName <- gsub("-\\d+$", "", multiplexed_data$sampleName)
