@@ -381,8 +381,8 @@ else
 fi
 
 ### Clean up ###
-#info "Cleaning up..."
-#rm -r etc/test_output
+info "Cleaning up..."
+rm -r etc/test_output
 
 if [[ $__nuckit_env != null ]]; then
     deactivate_env
