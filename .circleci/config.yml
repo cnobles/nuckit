@@ -5,8 +5,9 @@
 version: 2
 jobs:
   build:
-    docker:
-      - image: circleci/ruby:2.4.1
+    machine: true
+    #docker:
+    #  - image: circleci/ruby:2.4.1
 
     steps:
       - checkout
@@ -14,9 +15,9 @@ jobs:
       - run:
           name: install
           command: |
-            bash install.sh -v
+            bash install.sh -v -s -b
 
       - run:
           name: run tests
           command: |
-            bash etc/test.sh -e nuckit -v
+            bash etc/test.sh -e nuckit -v -n

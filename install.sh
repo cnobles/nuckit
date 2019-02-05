@@ -7,6 +7,7 @@ read -r -d '' __usage <<-'EOF'
   -n --nuckit_dir   [arg] Location of NucKit source code. Default: this directory
   -c --conda  [arg]       Location of Conda installation. Default: ${PREFIX}
   -u --update [arg]       Update NucKit [tools], conda [env], or [all].
+  -b --build              Install from build (quick), rather than requirements (slow).
   -w --without_conda      Install without setting up conda or environment.
   -i --ignore_ctrl_mod    Ignore installation of control module.
   -r --cran               Install missing dependencies from CRAN.
@@ -69,6 +70,7 @@ __nuckit_env="${arg_e:-nuckit}"
 __update_tools=false
 __update_env=false
 __with_conda=true
+__reqs_install=true
 __install_ctrl_mod=true
 __install_cran=false
 __install_mirror=false
@@ -87,6 +89,11 @@ fi
 # install without conda
 if [[ "${arg_w:?}" == "1" ]]; then
     __with_conda=false
+fi
+
+# install from build
+if [[ "${arg_b:?}" == "1" ]]; then
+    __reqs_install=false
 fi
 
 # ignore installation of control module
@@ -119,7 +126,7 @@ function __detect_conda_install () {
     local discovered=$(__test_conda)
     if [[ $discovered = true ]]; then
         local conda_path="$(which conda)"
-        echo ${conda_path%'/bin/conda'}
+        echo ${conda_path%'/condabin/conda'}
     fi
 }
 
@@ -162,15 +169,19 @@ function __test_nuckit_ctrl () {
     fi
 }
 
+function __test_bashrc () {
+  grep conda.sh ~/.bashrc > /dev/null && echo true || echo false
+}
+
 function activate_nuckit () {
     set +o nounset
-    source activate $__nuckit_env
+    conda activate $__nuckit_env
     set -o nounset
 }
 
 function deactivate_nuckit () {
     set +o nounset
-    source deactivate
+    conda deactivate
     set -o nounset
 }
 
@@ -187,10 +198,33 @@ function install_conda () {
 }
 
 function install_environment () {
-    debug_capture conda env update --name=$__nuckit_env \
-              --quiet --file etc/environment.yml
+    if [[ $__reqs_install == "true" ]]; then
+        info "    Building from: etc/requirements.yml"
+        debug_capture conda env update --name=$__nuckit_env \
+            --quiet --file etc/requirements.yml 2>&1
+    else
+        info "    Building from: etc/build.v0.1.0.txt"
+        debug_capture conda create --name=$__nuckit_env \
+            --quiet --yes --file etc/build.v0.1.0.txt 2>&1
+    fi
+    
     if [[ $(__test_env) != true ]]; then
-          installation_error "Environment creation"
+      	installation_error "Environment creation"
+    else
+        activate_nuckit
+        local __activated=true
+    fi
+
+    if [[ $(__test_r_version) != true ]]; then
+        installation_error "Insufficient R-program version"
+    fi
+
+    if [[ $(__test_r_packages) != true ]]; then
+        installation_error "R-package installation"
+    fi
+    
+    if [[ ${__activated} = true ]]; then
+        deactivate_nuckit
     fi
 }
 
@@ -278,7 +312,11 @@ if [[ $__with_conda == true ]]; then
     __env_exists=$(__test_env)
     debug "    Environment:        ${__env_exists}"
     
-    if [[ $__env_exists == true ]]; then
+    if [[ $__conda_installed = true ]]; then
+        source ${__conda_path}/etc/profile.d/conda.sh
+    fi
+    
+    if [[ $__env_exists = true ]]; then
         activate_nuckit
         __nuckit_installed=$(__test_nuckit_ctrl)
         deactivate_nuckit
@@ -303,6 +341,9 @@ if [[ $__with_conda == true ]]; then
         install_conda
         __env_changed=true
     fi
+    
+    # Source conda into shell
+    source ${__conda_path}/etc/profile.d/conda.sh
 
     # Create Conda environment for NucKit
     if [[ $__env_exists = true && $__update_env = false ]]; then
@@ -366,14 +407,17 @@ else
     info "Skipping NucKit tests."
 fi
 
-# Check if on pre-existing path
-if [[ $__old_path != *"${__conda_path}/bin"* ]]; then
+# Check if sourcing conda in .bashrc
+
+if [[  $(__test_bashrc) = false ]]; then
     warning "** Conda was not detected on your PATH. **"
-    warning "This is normal if you haven't installed Conda before."
-    warning "To add it to your path, run:"
-    warning "   'echo \"export PATH=\$PATH:${__conda_path}/bin\" >> ~/.bashrc'"
+    warning "This is normal if you have not installed Conda before."
+    warning "To add it to your current .bashrc to be sourced during shell"
+    warning "startup, run:"
+    warning "   'echo \"# Added to activate conda within shell\" >> ~/.bashrc"
+    warning "   'echo \"source ${__conda_path}/etc/profile.d/conda.sh\" >> ~/.bashrc"
     warning "and close and re-open your terminal session to apply."
-    warning "When finished, run 'source activate ${__nuckit_env}' to begin."
+    warning "When finished, run 'conda activate ${__nuckit_env}' to begin."
 else
-    info "Done. Run 'source activate ${__nuckit_env}' to begin."
+    info "Done. Run 'conda activate ${__nuckit_env}' to begin."
 fi
