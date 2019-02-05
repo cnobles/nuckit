@@ -12,6 +12,7 @@ dependencies:
   - r-yaml
   - r-stringr
   - r-data.table
+  - r-digest
   - bioconductor-s4vectors
   - bioconductor-iranges
   - bioconductor-genomicranges

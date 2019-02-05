@@ -116,7 +116,7 @@ parser$add_argument(
 args <- parser$parse_args(commandArgs(trailingOnly = TRUE))
 
 if( is.null(args$seqFile) ){
-  stop("Please choose a sequence file (fasta or fastq).\n")
+  stop("\n  Please choose a sequence file (fasta or fastq).\n")
 }
 
 if( !is.null(args$maxMismatch) ){
@@ -131,7 +131,7 @@ if( args$overMaxLength == 0 ){
 if( all(args$collectRandomIDs != FALSE) ){
   if( !grepl("N", args$leadTrimSeq) ){
     cat(
-      "No random nucleotides (Ns) found in leadTrimSeq.",
+      "\n  No random nucleotides (Ns) found in leadTrimSeq.",
       "Turning off collection of randomIDs.\n"
     )
     args$collectRandomIDs <- FALSE

@@ -48,12 +48,10 @@ input_table <- input_table[
 if( args$verbose ){
   
   cat("List Inputs")
-  pander::pandoc.table(
+  print(
     data.frame(input_table),
-    justify = "left", 
-    row.names = FALSE,
-    style = "simple",
-    split.table = Inf
+    right = FALSE, 
+    row.names = FALSE
   )
   
 }
@@ -98,9 +96,9 @@ readFile <- function(path, root){
   }else if( any(stringr::str_detect(exts, "fast")) ){
     
     if( any(stringr::str_detect(exts, "fasta")) ){
-      return(ShortRead::readFasta(path))
+      return(as.character(ShortRead::sread(ShortRead::readFasta(path))))
     }else{
-      return(ShortRead::readFastq(path))
+      return(as.character(ShortRead::sread(ShortRead::readFastq(path))))
     }
 
   }else{
@@ -131,20 +129,6 @@ df <- data.frame(
   "outcome" = ifelse(test_digests == check_digests, "pass", "FAIL")
 )
 
-# Log output if requested ----
-if( args$verbose ){
-  
-  cat("\nList of Outcomes")
-  pander::pandoc.table(
-    df,
-    justify = "left", 
-    row.names = FALSE,
-    style = "simple",
-    split.table = Inf
-  )
-  
-}
-
 # Write output file if requested ----
 if( args$output != FALSE ){
   if( stringr::str_detect(args$output, ".tsv$") ){
@@ -156,6 +140,21 @@ if( args$output != FALSE ){
   }else if( stringr::str_detect(args$output, ".RData$") ){
     save(df, file = args$output)
   }
+}
+
+# Log output if requested ----
+if( args$verbose ){
+  
+  df$md5_standard <- paste0(substr(df$md5_standard, start = 1, stop = 7), "...")
+  df$md5_tested <- paste0(substr(df$md5_tested, start = 1, stop = 7), "...")
+  
+  cat("\nList of Outcomes:\n")
+  print(
+    df,
+    right = FALSE, 
+    row.names = FALSE
+  )
+  
 }
 
 # Finish up and close out ----

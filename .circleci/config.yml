@@ -14,7 +14,7 @@ jobs:
       - run:
           name: install
           command: |
-            bash install.sh -v
+            bash install.sh -v -s
 
       - run:
           name: run tests
