@@ -23,7 +23,7 @@ writeSeqFiles <- function(seqs, file, compress = FALSE){
           object = seqs, 
           file = file, 
           compress = TRUE, 
-          width = max(c(width(seqs), 1))
+          width = max(c(Biostrings::width(seqs), 1))
         )
         
       }else{
@@ -32,7 +32,7 @@ writeSeqFiles <- function(seqs, file, compress = FALSE){
           object = seqs, 
           file = paste0(file, ".gz"), 
           compress = TRUE, 
-          width = max(c(width(seqs), 1))
+          width = max(c(Biostrings::width(seqs), 1))
         )
         
       }
@@ -43,7 +43,7 @@ writeSeqFiles <- function(seqs, file, compress = FALSE){
         object = seqs, 
         file = file, 
         compress = FALSE, 
-        width = max(c(width(seqs), 1))
+        width = max(c(Biostrings::width(seqs), 1))
       )
       
     }
@@ -164,10 +164,7 @@ seqFileType <- function(file){
   seq_type <- stringr::str_extract(as.character(file), "fa[\\w]*")
   
   if( any(!seq_type %in% c("fa", "fasta", "fastq")) ){
-    stop(
-      "\n  Unrecognized seq file type, please ",
-      "choose '*.fasta' or '*.fastq'.\n"
-    )
+    stop("Unrecognized seq file type, please choose '*.fasta' or '*.fastq'.")
   }
   
   return(
