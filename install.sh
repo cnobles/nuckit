@@ -203,9 +203,9 @@ function install_environment () {
         debug_capture conda env update --name=$__nuckit_env \
             --quiet --file etc/requirements.yml 2>&1
     else
-        info "    Building from: etc/build.v0.1.0.txt"
+        info "    Building from: etc/build.v0.1.1.txt"
         debug_capture conda create --name=$__nuckit_env \
-            --quiet --yes --file etc/build.v0.1.0.txt 2>&1
+            --quiet --yes --file etc/build.v0.1.1.txt 2>&1
     fi
     
     if [[ $(__test_env) != true ]]; then
