@@ -5,6 +5,7 @@ channels:
   - bushmanlab
   - defaults
 dependencies:
+  - blat
   - r>=3.4.1
   - python<3.7.0
   - r-base
