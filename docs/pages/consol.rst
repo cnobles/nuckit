@@ -3,6 +3,7 @@
 .. contents::
    :depth: 3
 
+
 Consolidate Sequences
 =====================
 

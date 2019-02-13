@@ -1,4 +1,4 @@
-.. _consol:
+.. _couple:
 
 .. contents::
    :depth: 3

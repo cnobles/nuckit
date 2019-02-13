@@ -39,7 +39,7 @@ def main(argv = sys.argv):
 
     parser.add_argument(
         "--nuckit_dir", default = os.getenv("NUCKIT_DIR", os.getcwd()),
-        help = "Path to NucKit installation. (default: %(default)s)'"
+        help = "Path to NucKit installation. (default: %(default)s)"
     )
 
     parser.add_argument(
