@@ -58,7 +58,7 @@ parser$add_argument(
 )
 
 parser$add_argument(
-  "--pctID", nargs = 1, type = "character", default = 95,
+  "--pctID", nargs = 1, type = "integer", default = 95,
   help = desc$pctID
 )
 
@@ -70,6 +70,21 @@ parser$add_argument(
 parser$add_argument(
   "--subMatAdj", nargs = "+", type = "character", default = FALSE,
   help = desc$subMatAdj
+)
+
+parser$add_argument(
+  "--gapOpen", nargs = 1, type = "integer", default = 10,
+  help = desc$gapOpen
+)
+
+parser$add_argument(
+  "--gapExt", nargs = 1, type = "integer", default = 4,
+  help = desc$gapExt
+)
+
+parser$add_argument(
+  "--minAlignLength", nargs = 1, type = "integer", default = 20,
+  help = desc$minAlignLength
 )
 
 parser$add_argument(
@@ -232,7 +247,8 @@ input_table <- input_table[
   match(
     c("seqFile :", "output :", "index :", "header :", "negSelect :", "seq :", 
       "mismatch :", "refseqs :", "aligntype :", "pctID :", "pctIDtype :", 
-      "subMatAdj :", "readNamePattern :", "compress :", "cores :"), 
+      "subMatAdj :", "gapOpen :", "gapExt :", "minAlignLength :", 
+      "readNamePattern :", "compress :", "cores :"), 
     input_table$Variables)
   ,]
 
@@ -244,16 +260,14 @@ if( !args$quiet ){
     right = FALSE, 
     row.names = FALSE
   )
-  cat("\n  Filtering methods include ", filt_type, "\n")
+  cat("\n  Filtering methods include", filt_type, "\n")
   
 }
 
 
 # Additional supporting functions ----------------------------------------------
 source(file.path(code_dir, "supporting_scripts", "writeSeqFiles.R"))
-source(file.path(
-  code_dir, "supporting_scripts", "binary_ambiguous_nucleotide_scoring_matrix.R"
-))
+source(file.path(code_dir, "supporting_scripts", "nucleotideScoringMatrices.R"))
 source(file.path(code_dir, "supporting_scripts", "substituteAdjustments.R"))
 source(file.path(code_dir, "supporting_scripts", "utility_funcs.R"))
 
@@ -372,7 +386,8 @@ filterSeqFile <- function(input.seqs, args){
     
     ref_filter_idx <- lapply(
       input_seqs,
-      function(seqs, refs, alntype, pctID, idtype, subadj, neg){
+      function(seqs, refs, alntype, pctID, idtype, subadj, gapOpen, gapExt, 
+               minAlignLength, neg){
         
         # Load reference sequences
         ref_types <- unlist(strsplit(refs, "/"))
@@ -437,19 +452,23 @@ filterSeqFile <- function(input.seqs, args){
         
         alignments <- lapply(
           refs, 
-          function(ref, seqs, alntype, SO){
+          function(ref, seqs, alntype, gapOpen, gapExt, SO){
             
             Biostrings::pairwiseAlignment(
               pattern = seqs, 
               subject = ref, 
               type = alntype, 
-              substitutionMatrix = banmat(),
+              gapOpening = gapOpen,
+              gapExtension = gapExt,
+              substitutionMatrix = usanmat(),
               scoreOnly = SO
             )
             
           },
           seqs = Biostrings::DNAStringSet(seqs),
           alntype = alntype,
+          gapOpen = gapOpen,
+          gapExt = gapExt,
           SO = SO
         )
         
@@ -471,15 +490,36 @@ filterSeqFile <- function(input.seqs, args){
             ncol = length(refs)
           )
           
-          max_score <- apply(100 * local_score / local_size, 1, max)
+          top_score_idx <- apply(100 * local_score / local_size, 1, function(x){ 
+            which(x == max(x)) 
+          })
+          
+          top_score_len <- sapply(
+            seq_along(top_score_idx), 
+            function(i){ 
+              unique(local_size[i, top_score_idx[[i]], drop = TRUE])
+            }
+          )
+          
+          top_score <- sapply(
+            seq_along(top_score_idx), 
+            function(i){ 
+              unique(local_score[i, top_score_idx[[i]], drop = TRUE])
+            }
+          )
+          
+          max_score <- 100 * top_score / top_score_len
+          
         }else{
+          
           stop("\n  Input error, pctIDtype must be either 'local' or 'global'.")
+          
         }
         
         if( neg ){
-          return( which(max_score < pctID) )
+          return( which(max_score < pctID | top_score_idx < minAlignLength) )
         }else{
-          return( which(max_score >= pctID) )
+          return( which(max_score >= pctID & top_score_len >= minAlignLength) )
         }
         
       },
@@ -488,6 +528,9 @@ filterSeqFile <- function(input.seqs, args){
       pctID = args$pctID,
       idtype = args$pctIDtype,
       subadj = args$subMatAdj,
+      gapOpen = args$gapOpen,
+      gapExt = args$gapExt,
+      minAlignLength = args$minAlignLength,
       neg = args$negSelect
     )
     
