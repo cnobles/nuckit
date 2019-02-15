@@ -82,9 +82,9 @@ if( args$output != "NA" ){
   
   args$output <- paste0(args$output, outType)
   
-}else{
-  
-  stop("\n  No output file name given. Please provide.\n")
+  if( args$compress & !grepl(".gz", args$output) ){
+    args$output <- paste0(args$output, ".gz")
+  }
   
 }
 
@@ -213,14 +213,6 @@ key <- data.frame(
 consolidated_seqs <- Biostrings::DNAStringSet(levels(factor_seqs))
 names(consolidated_seqs) <- paste0(args$seqName, seq_along(levels(factor_seqs)))
 
-if( !is.null(args$output) ){
-  
-  if( args$compress & !grepl(".gz", args$output) ){
-    args$output <- paste0(args$output, ".gz")
-  }
-  
-}
-
 # Stats if requested
 if( args$stat != FALSE ){
   
@@ -242,7 +234,7 @@ if( args$stat != FALSE ){
 
 # Write output and key files
 # Output
-if( is.null(args$output) ){
+if( args$output == "NA" ){
   
   print(
     data.frame(
