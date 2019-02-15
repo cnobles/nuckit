@@ -385,7 +385,7 @@ filterSeqFile <- function(input.seqs, args){
   if( length(args$refseqs) > 0 ){
     
     ref_filter_idx <- lapply(
-      input_seqs,
+      input.seqs,
       function(seqs, refs, alntype, pctID, idtype, subadj, gapOpen, gapExt, 
                minAlignLength, neg){
         
@@ -494,19 +494,19 @@ filterSeqFile <- function(input.seqs, args){
             which(x == max(x)) 
           })
           
-          top_score_len <- sapply(
+          top_score_len <- unlist(lapply(
             seq_along(top_score_idx), 
             function(i){ 
               unique(local_size[i, top_score_idx[[i]], drop = TRUE])
             }
-          )
+          ))
           
-          top_score <- sapply(
+          top_score <- unlist(lapply(
             seq_along(top_score_idx), 
             function(i){ 
               unique(local_score[i, top_score_idx[[i]], drop = TRUE])
             }
-          )
+          ))
           
           max_score <- 100 * top_score / top_score_len
           
