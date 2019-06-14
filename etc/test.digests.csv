@@ -18,7 +18,7 @@ seq_negfilt_I1.stat.csv,756a30823370d5a78c5f283aefa578af
 test.R1.trim.stat.csv,364474057194c79c4dc88ca8891d5262
 test.R2.trim.stat.csv,83b7391e2035f9bbd956a6c29e3495e6
 test.stat.csv,75f91f26699b4d34b46cfcb1001794a3
-testSeq-1.chimera.rds,6d257374610932bb603f661b69063483
+testSeq-1.chimera.rds,17b9205868ede9b99e9990c2bcfbf2bb
 testSeq-1.cond.csv,2a864debe2de32de22c72968f9ae9a7d
 testSeq-1.couple.stat.csv,fd8fc85f8946bcbc182782807e3c06de
 testSeq-1.I1.fastq.gz,7ab301ba4eb12ef0b5d899c631b93c65

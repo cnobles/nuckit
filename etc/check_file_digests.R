@@ -1,6 +1,6 @@
 # Import yaml file with test paths and md5 digests
 # Required libraries stringr, digest, Biostrings, data.table, yaml, pander
-options(stringsAsFactors = FALSE, scipen = 99, warn = -1, window = 999)
+options(stringsAsFactors = FALSE, scipen = 99, warn = -1, window = 120)
 suppressMessages(library("magrittr"))
 
 # Set up and gather command line arguments ----
